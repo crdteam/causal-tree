@@ -66,10 +66,15 @@ func (s *String) Snapshot() string {
 	return string(chars)
 }
 
-func (t *CausalTree) StringValue(atomID AtomID) *String {
+func (t *CausalTree) StringValue(atomID AtomID) (*String, error) {
+	i := t.atomIndex(atomID)
+	atom := t.Weave[i]
+	if _, ok := atom.Value.(InsertStr); !ok {
+		return nil, fmt.Errorf("%v is not an InsertStr atom: %T (%v)", atomID, atom, atom)
+	}
 	return &String{treePosition{
 		t:            t,
 		atomID:       atomID,
 		lastKnownPos: t.atomIndex(atomID),
-	}}
+	}}, nil
 }

@@ -15,7 +15,11 @@ func TestString(t *testing.T) {
 			{op: insertChar, char: 'd'},
 			{op: insertChar, char: 't'},
 		})
-		str := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+
 		want := "crdt"
 		if got := str.Snapshot(); got != want {
 			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
@@ -32,7 +36,11 @@ func TestString(t *testing.T) {
 			// Delete char 'r' in position #2.
 			{op: deleteCharAt, pos: 2},
 		})
-		str := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+
 		want := "cdt"
 		if got := str.Snapshot(); got != want {
 			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
@@ -46,13 +54,17 @@ func TestString(t *testing.T) {
 			{local: 0, op: insertChar, char: 'd'},
 			{local: 0, op: insertChar, char: 't'},
 
-			// Doubly delete char 'r' in position #2.
+			// Doubly delete char 'r' in position #2 via merge.
 			{local: 0, op: fork, remote: 1},
 			{local: 0, op: deleteCharAt, pos: 2},
 			{local: 1, op: deleteCharAt, pos: 2},
 			{local: 0, op: merge, remote: 1},
 		})
-		str := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+
 		want := "cdt"
 		if got := str.Snapshot(); got != want {
 			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
