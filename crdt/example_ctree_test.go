@@ -66,7 +66,6 @@ func ExampleCausalTree_overlap() {
 	// Output: dreser
 }
 
-//
 func ExampleCausalTree_ViewAt() {
 	s0 := crdt.NewCausalTree() // S0 @ T1
 	s0.InsertChar('a')         // S0 @ T2
