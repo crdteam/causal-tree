@@ -37,14 +37,12 @@ type String struct{ treePosition }
 
 func (*String) isValue() {}
 
-// Snapshot returns the string represented by the atom.
-func (s *String) Snapshot() string {
+func (s *String) walk(onDeleteChar, onInsertChar func(atom Atom)) {
 	i := s.atomIndex()
 
-	var chars []rune
-	var isDeleting bool
+	isDeleting := false
 	walkCausalBlock(s.t.Weave[i:], func(atom Atom) bool {
-		switch v := atom.Value.(type) {
+		switch atom.Value.(type) {
 		case Delete:
 			if atom.Cause == s.atomID {
 				// String itself is deleted, interrupt iteration.
@@ -54,18 +52,45 @@ func (s *String) Snapshot() string {
 			// once when isDeleting=false.
 			if !isDeleting {
 				isDeleting = true
-				chars = chars[:len(chars)-1]
+				onDeleteChar(atom)
 			}
 		case InsertChar:
 			isDeleting = false
-			chars = append(chars, v.Char)
+			onInsertChar(atom)
 		}
 		return true
 	})
+}
 
+// Snapshot returns the string represented by the atom.
+func (s *String) Snapshot() string {
+	var chars []rune
+	onDeleteChar := func(atom Atom) {
+		chars = chars[:len(chars)-1]
+	}
+	onInsertChar := func(atom Atom) {
+		chars = append(chars, atom.Value.(InsertChar).Char)
+	}
+	s.walk(onDeleteChar, onInsertChar)
 	return string(chars)
 }
 
+// Len returns the size of the string (in codepoints).
+func (s *String) Len() int {
+	var size int
+	onDeleteChar := func(atom Atom) {
+		size--
+	}
+	onInsertChar := func(atom Atom) {
+		size++
+	}
+	s.walk(onDeleteChar, onInsertChar)
+	return size
+}
+
+// ----
+
+// StringValue returns a wrapper over InsertStr.
 func (t *CausalTree) StringValue(atomID AtomID) (*String, error) {
 	i := t.atomIndex(atomID)
 	atom := t.Weave[i]

@@ -20,9 +20,13 @@ func TestString(t *testing.T) {
 			t.Fatalf("err: %v", err)
 		}
 
-		want := "crdt"
-		if got := str.Snapshot(); got != want {
-			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
+		wantStr := "crdt"
+		if got := str.Snapshot(); got != wantStr {
+			t.Errorf("str.Snapshot() = %s (!= %s)", got, wantStr)
+		}
+		wantLen := 4
+		if got := str.Len(); got != wantLen {
+			t.Errorf("str.Len() = %d (!= %d)", got, wantLen)
 		}
 	})
 	t.Run("DeletedChar", func(t *testing.T) {
@@ -41,9 +45,13 @@ func TestString(t *testing.T) {
 			t.Fatalf("err: %v", err)
 		}
 
-		want := "cdt"
-		if got := str.Snapshot(); got != want {
-			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
+		wantStr := "cdt"
+		if got := str.Snapshot(); got != wantStr {
+			t.Errorf("str.Snapshot() = %s (!= %s)", got, wantStr)
+		}
+		wantLen := 3
+		if got := str.Len(); got != wantLen {
+			t.Errorf("str.Len() = %d (!= %d)", got, wantLen)
 		}
 	})
 	t.Run("DoubleDeleteChar", func(t *testing.T) {
@@ -65,9 +73,13 @@ func TestString(t *testing.T) {
 			t.Fatalf("err: %v", err)
 		}
 
-		want := "cdt"
-		if got := str.Snapshot(); got != want {
-			t.Errorf("str.Snapshot() = %s (!= %s)", got, want)
+		wantStr := "cdt"
+		if got := str.Snapshot(); got != wantStr {
+			t.Errorf("str.Snapshot() = %s (!= %s)", got, wantStr)
+		}
+		wantLen := 3
+		if got := str.Len(); got != wantLen {
+			t.Errorf("str.Len() = %d (!= %d)", got, wantLen)
 		}
 	})
 }
