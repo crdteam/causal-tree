@@ -23,6 +23,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -1073,23 +1074,37 @@ func (t *CausalTree) InsertCounter() error {
 // | Conversion |
 // +------------+
 
-// ToString interprets tree as a sequence of chars.
-func (t *CausalTree) ToString() string {
-	atoms := t.filterDeleted()
-	chars := make([]rune, len(atoms))
-	for i, atom := range atoms {
-		switch value := atom.Value.(type) {
-		case InsertStr:
-			chars[i] = '*'
-		case InsertChar:
-			chars[i] = value.Char
-		case InsertCounter:
-			chars[i] = '$'
-		case InsertAdd:
-			chars[i] = '0'
+func toString(data interface{}) string {
+	switch v := data.(type) {
+	case int32:
+		return strconv.FormatInt(data.(int64), 10)
+	case string:
+		return data.(string)
+	case []interface{}:
+		var resultingStringBuilder strings.Builder
+		for _, element := range data.([]interface{}) {
+			resultingStringBuilder.WriteString(toString(element))
 		}
+		return resultingStringBuilder.String()
+	default:
+		panic(fmt.Sprintf("ToString: invalid json element (%T)", v))
 	}
-	return string(chars)
+}
+
+// ToString returns a string representation of the CausalTree t.
+func (t *CausalTree) ToString() string {
+	var data []interface{}
+	jsonData, err := t.ToJSON()
+	if err != nil {
+		panic(fmt.Sprintf("ToString: %v", err))
+	}
+	err = json.Unmarshal(jsonData, &data)
+	if err != nil {
+		panic(fmt.Sprintf("ToString: %v", err))
+	}
+
+	return toString(data)
+
 }
 
 // this interface represents a generic type.
