@@ -1,5 +1,69 @@
 # API
 
+```mermaid
+classDiagram
+    class Container
+    <<interface>> Container
+    Container: Len() int
+    Container: Cursor() Cursor
+    
+    class Value
+    <<interface>> Value
+    Value: Snapshot()
+
+    class String
+    Container <|.. String
+    Value <|.. String
+    String: Snapshot() str
+    
+    class List
+    Container <|.. List
+    Value <|.. List
+    List: Snapshot() []any
+    
+    class CausalTree
+    Register <|.. CausalTree
+
+    class Cursor
+    <<interface>> Cursor
+    Cursor: Index(int i)
+    Cursor: Delete()
+    
+    class Register
+    <<interface>> Register
+    Register: SetString() *String
+    Register: SetCounter() *Counter
+    Register: SetList() *List
+    Register: Clear()
+    Register: Value() Value
+
+    class Char
+    String <-- Char
+    Char: rune ch
+    
+    class StringCursor
+    String .. StringCursor
+    Cursor <|.. StringCursor
+    StringCursor: Insert(rune ch) *Char
+    StringCursor: Value() *Char
+    
+    class ListCursor
+    Cursor <|.. ListCursor
+    List .. ListCursor
+    ListCursor: Insert() *Element
+    ListCursor: Value() *Element
+    
+    class Element
+    List <-- Element
+    Register <|.. Element
+    
+    class Counter
+    Value <|.. Counter
+    Counter: Snapshot() int32
+    Counter: Increment(int32 x)
+    Counter: Decrement(int32 x)
+```
+
 ## Definitions
 
 A _Value_ is a persistent structure containing data. They may be read and converted
