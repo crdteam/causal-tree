@@ -1081,11 +1081,11 @@ func toString(data interface{}) string {
 	case string:
 		return data.(string)
 	case []interface{}:
-		var resultingStringBuilder strings.Builder
+		var b strings.Builder
 		for _, element := range data.([]interface{}) {
-			resultingStringBuilder.WriteString(toString(element))
+			b.WriteString(toString(element))
 		}
-		return resultingStringBuilder.String()
+		return b.String()
 	default:
 		panic(fmt.Sprintf("ToString: invalid json element (%T)", v))
 	}
