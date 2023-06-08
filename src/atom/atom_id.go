@@ -23,6 +23,10 @@ type AtomID struct {
 // | String |
 // +--------+
 
+// String returns a string representation of an atom ID.
+// The format is "S<site>@T<timestamp>".
+//
+// Example: "S0@T01"
 func (id AtomID) String() string {
 	return fmt.Sprintf("S%d@T%02d", id.Site, id.Timestamp)
 }
@@ -31,7 +35,26 @@ func (id AtomID) String() string {
 // | Ordering |
 // +----------+
 
-// Compare returns the relative order between atom IDs.
+/*
+	Compares two AtomIDs to determine their relative ordering based on their timestamps and sites.
+
+	Ordering Rules
+
+		1. Timestamp: An AtomID with an older timestamp is considered "older" (i.e., smaller).
+		2. Site: If timestamps are equal, the AtomID with a larger site is considered "older" (i.e., smaller).
+
+	Return Values
+
+	Returns one of three possible values depending on the comparison:
+
+		- -1: The current AtomID is older than the other.
+		- +1: The current AtomID is younger than the other.
+		- 0: Both AtomIDs are equal.
+
+	Important
+
+	This ordering ensures that older timestamps take precedence over sites, and within the same timestamp, larger sites are considered older.
+*/
 func (id AtomID) Compare(other AtomID) int {
 	// Ascending according to timestamp (older first)
 	if id.Timestamp < other.Timestamp {

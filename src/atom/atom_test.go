@@ -80,3 +80,109 @@ func TestAtomID_String(t *testing.T) {
 		})
 	}
 }
+
+func TestAtomID_Compare(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name   string
+		id     AtomID
+		other  AtomID
+		expect int
+	}{
+		{
+			name: "older timestamp",
+			id: AtomID{
+				Site:      1,
+				Timestamp: 1,
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			expect: -1,
+		},
+		{
+			name: "newer timestamp",
+			id: AtomID{
+				Site:      1,
+				Timestamp: 3,
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			expect: 1,
+		},
+		{
+			name: "equal timestamp, older site",
+			id: AtomID{
+				Site:      2,
+				Timestamp: 2,
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			expect: -1,
+		},
+		{
+			name: "equal timestamp, newer site",
+			id: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			other: AtomID{
+				Site:      2,
+				Timestamp: 2,
+			},
+			expect: 1,
+		},
+		{
+			name: "equal timestamp and site",
+			id: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 2,
+			},
+			expect: 0,
+		},
+		// Edge Cases
+		{
+			name: "maximum timestamp, same site",
+			id: AtomID{
+				Site:      1,
+				Timestamp: ^uint32(0), // Maximum possible uint32 value
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 1,
+			},
+			expect: 1,
+		},
+		{
+			name: "same timestamp, maximum site",
+			id: AtomID{
+				Site:      ^uint16(0), // Maximum possible uint16 value
+				Timestamp: 1,
+			},
+			other: AtomID{
+				Site:      1,
+				Timestamp: 1,
+			},
+			expect: -1,
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.id.Compare(tc.other)
+			if got != tc.expect {
+				t.Errorf("expected %d, got %d", tc.expect, got)
+			}
+		})
+	}
+}
