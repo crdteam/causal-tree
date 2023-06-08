@@ -88,3 +88,12 @@ func MergeWeaves(w1, w2 []Atom) []Atom {
 	}
 	return weave
 }
+
+// Deletes all the descendants of atom into the weave.
+// Time complexity: O(len(block))
+func DeleteDescendants(block []Atom, atomIndex int) {
+	causalBlockSz := CausalBlockSize(block[atomIndex:])
+	for i := 0; i < causalBlockSz; i++ {
+		block[atomIndex+i] = Atom{}
+	}
+}

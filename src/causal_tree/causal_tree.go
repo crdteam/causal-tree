@@ -11,7 +11,7 @@ following the excellent explanation by Archagon [2].
 [1]: GRISCHENKO, VICTOR. Causal trees: towards real-time read-write hypertext.
 [2]: http://archagon.net/blog/2018/03/24/data-laced-with-history/
 */
-package crdt
+package causal_tree
 
 import (
 	"bytes"
@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	atm "github.com/crdteam/causal-tree/crdt/atom"
-	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
+	atm "github.com/crdteam/causal-tree/src/atom"
+	"github.com/crdteam/causal-tree/src/utils/indexmap"
 	"github.com/google/uuid"
 )
 
@@ -598,15 +598,6 @@ func isContainer(atom atm.Atom) bool {
 
 }
 
-// Deletes all the descendants of atom into the weave.
-// Time complexity: O(len(block))
-func deleteDescendants(block []atm.Atom, atomIndex int) {
-	causalBlockSz := atm.CausalBlockSize(block[atomIndex:])
-	for i := 0; i < causalBlockSz; i++ {
-		block[atomIndex+i] = atm.Atom{}
-	}
-}
-
 // Time complexity: O(atoms)
 func (t *CausalTree) filterDeleted() []atm.Atom {
 	atoms := make([]atm.Atom, len(t.Weave))
@@ -623,7 +614,7 @@ func (t *CausalTree) filterDeleted() []atm.Atom {
 			// indices map must have the cause location.
 			deletedAtomIdx := indices[atom.Cause]
 			if isContainer(atoms[deletedAtomIdx]) {
-				deleteDescendants(atoms, deletedAtomIdx)
+				atm.DeleteDescendants(atoms, deletedAtomIdx)
 			} else {
 				atoms[i] = atm.Atom{}              //Delete the "Delete" atom
 				atoms[deletedAtomIdx] = atm.Atom{} //Delete the target atom

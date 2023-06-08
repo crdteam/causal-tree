@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/crdteam/causal-tree/crdt"
-	atm "github.com/crdteam/causal-tree/crdt/atom"
+	atm "github.com/crdteam/causal-tree/src/atom"
+	ctree "github.com/crdteam/causal-tree/src/causal_tree"
 )
 
 // Tests are structured as a sequence of operations on a list of trees.
@@ -162,13 +162,13 @@ func setupTestFile(name string) (*os.File, error) {
 }
 
 // Execute sequence of operations dumping intermediate data structures into testdata.
-func testOperations(t *testing.T, ops []operation) []*crdt.CausalTree {
+func testOperations(t *testing.T, ops []operation) []*ctree.CausalTree {
 	must := func(err error) {
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
 	}
-	trees := []*crdt.CausalTree{crdt.NewCausalTree()}
+	trees := []*ctree.CausalTree{ctree.NewCausalTree()}
 	f, err := setupTestFile(t.Name())
 	if err != nil {
 		t.Log(err)
@@ -234,7 +234,7 @@ func testOperations(t *testing.T, ops []operation) []*crdt.CausalTree {
 
 // Execute list of operations, checking if they are well-formed.
 func validateOperations(ops []operation) error {
-	trees := []*crdt.CausalTree{crdt.NewCausalTree()}
+	trees := []*ctree.CausalTree{ctree.NewCausalTree()}
 	for _, op := range ops {
 		if op.local >= len(trees) {
 			return fmt.Errorf("invalid local index %d (len: %d), op: %v", op.local, len(trees), op)
@@ -312,11 +312,11 @@ func readFuzzData(filename string) ([]byte, error) {
 // -----
 
 // Make a tree randomly, using some other sites to make it interesting.
-func makeRandomTree(size int, r *rand.Rand) (*crdt.CausalTree, error) {
+func makeRandomTree(size int, r *rand.Rand) (*ctree.CausalTree, error) {
 	const numLists = 10
 	// Create trees forking from trees[0]
-	trees := make([]*crdt.CausalTree, numLists)
-	trees[0] = crdt.NewCausalTree()
+	trees := make([]*ctree.CausalTree, numLists)
+	trees[0] = ctree.NewCausalTree()
 	for i := 1; i < numLists; i++ {
 		t, err := trees[0].Fork()
 		if err != nil {

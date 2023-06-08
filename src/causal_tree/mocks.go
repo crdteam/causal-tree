@@ -1,7 +1,7 @@
-package crdt
+package causal_tree
 
 import (
-	atm "github.com/crdteam/causal-tree/crdt/atom"
+	atm "github.com/crdteam/causal-tree/src/atom"
 	"github.com/google/uuid"
 )
 

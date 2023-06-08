@@ -3,7 +3,7 @@ package atom
 import (
 	"fmt"
 
-	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
+	"github.com/crdteam/causal-tree/src/utils/indexmap"
 )
 
 // AtomID is the unique identifier of an atom.

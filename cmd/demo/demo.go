@@ -33,7 +33,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/crdteam/causal-tree/crdt"
+	ctree "github.com/crdteam/causal-tree/src/causal_tree"
 )
 
 var (
@@ -63,7 +63,7 @@ type debugMessage struct {
 
 type treeinfo struct {
 	id    string
-	site  *crdt.CausalTree
+	site  *ctree.CausalTree
 	mu    *sync.Mutex
 	order int
 }
@@ -89,7 +89,7 @@ type state struct {
 }
 
 func newState(debugMsgs chan<- debugMessage) *state {
-	site := crdt.NewCausalTree()
+	site := ctree.NewCausalTree()
 	siteID := site.SiteID.String()
 	tree := treeinfo{
 		id:    siteID,
@@ -453,12 +453,12 @@ func unlockAll(trees ...treeinfo) {
 
 // -----
 
-func (s *state) debugTrees() []*crdt.CausalTree {
+func (s *state) debugTrees() []*ctree.CausalTree {
 	if !s.isDebug() {
 		return nil
 	}
 	treeinfos := s.treeinfos()
-	trees := make([]*crdt.CausalTree, len(treeinfos))
+	trees := make([]*ctree.CausalTree, len(treeinfos))
 	for i, info := range treeinfos {
 		trees[i] = info.site
 	}

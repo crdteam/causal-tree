@@ -3,7 +3,7 @@ package crdt_test
 import (
 	"testing"
 
-	"github.com/crdteam/causal-tree/crdt"
+	ctree "github.com/crdteam/causal-tree/src/causal_tree"
 	"pgregory.net/rapid"
 )
 
@@ -17,12 +17,12 @@ import (
 //
 // TODO: perhaps this is a sign that the cursor should be more predictable...?
 type stateMachine struct {
-	t     *crdt.CausalTree
+	t     *ctree.CausalTree
 	chars []rune
 }
 
 func (m *stateMachine) Init(t *rapid.T) {
-	m.t = crdt.NewCausalTree()
+	m.t = ctree.NewCausalTree()
 }
 
 func (m *stateMachine) InsertCharAt(t *rapid.T) {
