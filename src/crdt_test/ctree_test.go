@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	ctree "github.com/crdteam/causal-tree/src/causal_tree"
+	wft "github.com/crdteam/causal-tree/src/weft"
 	"github.com/google/uuid"
 )
 
@@ -308,33 +309,33 @@ func TestViewAt(t *testing.T) {
 	t0 := trees[0]
 
 	tests := []struct {
-		weft ctree.Weft
+		weft wft.Weft
 		want string
 	}{
 		// Now
-		{ctree.Weft{9, 9}, "xabdyefg"},
+		{wft.Weft{9, 9}, "xabdyefg"},
 		// Far future
-		{ctree.Weft{100, 100}, "xabdyefg"},
+		{wft.Weft{100, 100}, "xabdyefg"},
 		// "Undoing" actions of site #0
-		{ctree.Weft{8, 9}, "xabdyef"},
-		{ctree.Weft{7, 9}, "xabdye"},
-		{ctree.Weft{6, 9}, "xabdy"},
-		{ctree.Weft{5, 9}, "xabdy"},
-		{ctree.Weft{4, 8}, "xab"}, // Cutting 'd' from site #0 requires removing its child 'y' from site #1
-		{ctree.Weft{3, 7}, "xab"}, // Cutting 'c' from site #0 requires removing its delete child from site #1
-		{ctree.Weft{2, 7}, "xa"},
-		{ctree.Weft{1, 7}, "x"},
-		{ctree.Weft{0, 7}, "x"},
+		{wft.Weft{8, 9}, "xabdyef"},
+		{wft.Weft{7, 9}, "xabdye"},
+		{wft.Weft{6, 9}, "xabdy"},
+		{wft.Weft{5, 9}, "xabdy"},
+		{wft.Weft{4, 8}, "xab"}, // Cutting 'd' from site #0 requires removing its child 'y' from site #1
+		{wft.Weft{3, 7}, "xab"}, // Cutting 'c' from site #0 requires removing its delete child from site #1
+		{wft.Weft{2, 7}, "xa"},
+		{wft.Weft{1, 7}, "x"},
+		{wft.Weft{0, 7}, "x"},
 		// "Undoing" actions of site #1
-		{ctree.Weft{9, 8}, "xabdefg"},
-		{ctree.Weft{9, 7}, "xabcdefg"},
-		{ctree.Weft{9, 6}, "abcdefg"},
-		{ctree.Weft{9, 5}, "abcdefg"},
-		{ctree.Weft{9, 4}, "abcdefg"},
-		{ctree.Weft{9, 3}, "abcdefg"},
-		{ctree.Weft{9, 2}, "abcdefg"},
-		{ctree.Weft{9, 1}, "abcdefg"},
-		{ctree.Weft{9, 0}, "abcdefg"},
+		{wft.Weft{9, 8}, "xabdefg"},
+		{wft.Weft{9, 7}, "xabcdefg"},
+		{wft.Weft{9, 6}, "abcdefg"},
+		{wft.Weft{9, 5}, "abcdefg"},
+		{wft.Weft{9, 4}, "abcdefg"},
+		{wft.Weft{9, 3}, "abcdefg"},
+		{wft.Weft{9, 2}, "abcdefg"},
+		{wft.Weft{9, 1}, "abcdefg"},
+		{wft.Weft{9, 0}, "abcdefg"},
 	}
 	for _, test := range tests {
 		view, err := t0.ViewAt(test.weft)
@@ -359,12 +360,12 @@ func TestViewAtError(t *testing.T) {
 	t0 := trees[0]
 
 	tests := []struct {
-		weft ctree.Weft
+		weft wft.Weft
 	}{
 		// At timestamp 5 at site #0 we cut 'd', whose child 'y' in site #1 is at timestamp 9.
-		{ctree.Weft{4, 9}}, {ctree.Weft{3, 9}}, {ctree.Weft{2, 9}}, {ctree.Weft{1, 9}},
+		{wft.Weft{4, 9}}, {wft.Weft{3, 9}}, {wft.Weft{2, 9}}, {wft.Weft{1, 9}},
 		// At timestamp 4 at site #0 we cut 'c', whose delete child in site #1 is at timestamp 8.
-		{ctree.Weft{3, 8}}, {ctree.Weft{2, 8}}, {ctree.Weft{1, 8}},
+		{wft.Weft{3, 8}}, {wft.Weft{2, 8}}, {wft.Weft{1, 8}},
 	}
 	for _, test := range tests {
 		view, err := t0.ViewAt(test.weft)

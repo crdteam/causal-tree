@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	ctree "github.com/crdteam/causal-tree/src/causal_tree"
+	wft "github.com/crdteam/causal-tree/src/weft"
 )
 
 // Showcasing the main operations in a replicated list (CausalTree) data type.
@@ -86,10 +87,10 @@ func ExampleCausalTree_ViewAt() {
 	// c: s1 @ T5, caused by s1 @ T4 (b)
 
 	// Timestamps for each site: s0=4, s1=5, s2=7
-	v1, _ := s2.ViewAt(ctree.Weft{4, 5, 7})
-	v2, _ := s2.ViewAt(ctree.Weft{4, 5, 0})
-	v3, _ := s2.ViewAt(ctree.Weft{4, 0, 7})
-	v4, _ := s2.ViewAt(ctree.Weft{0, 3, 7}) // With s0=0, we need to cut s1 down to T3, because it is ultimately caused by 'a' from s0.
+	v1, _ := s2.ViewAt(wft.Weft{4, 5, 7})
+	v2, _ := s2.ViewAt(wft.Weft{4, 5, 0})
+	v3, _ := s2.ViewAt(wft.Weft{4, 0, 7})
+	v4, _ := s2.ViewAt(wft.Weft{0, 3, 7}) // With s0=0, we need to cut s1 down to T3, because it is ultimately caused by 'a' from s0.
 
 	fmt.Println("Now: ", v1.ToString())
 	fmt.Println("s2=0:", v2.ToString())
