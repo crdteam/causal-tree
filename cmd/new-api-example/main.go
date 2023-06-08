@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/brunokim/causal-tree/new-api-sample/crdt"
+	"github.com/crdteam/causal-tree/new-api-sample/crdt"
 )
 
 func main() {

@@ -33,7 +33,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt"
 )
 
 var (

@@ -1,6 +1,7 @@
 package crdt
 
 import (
+	atm "github.com/crdteam/causal-tree/crdt/atom"
 	"github.com/google/uuid"
 )
 
@@ -21,16 +22,16 @@ func MockUUIDs(uuids ...uuid.UUID) func() {
 func (t *CausalTree) Clone() *CausalTree {
 	n := len(t.Sitemap)
 	remote := &CausalTree{
-		Weave:     make([]Atom, len(t.Weave)),
+		Weave:     make([]atm.Atom, len(t.Weave)),
 		Cursor:    t.Cursor,
-		Yarns:     make([][]Atom, n),
+		Yarns:     make([][]atm.Atom, n),
 		Sitemap:   make([]uuid.UUID, n),
 		SiteID:    t.SiteID,
 		Timestamp: t.Timestamp,
 	}
 	copy(remote.Weave, t.Weave)
 	for i, yarn := range t.Yarns {
-		remote.Yarns[i] = make([]Atom, len(yarn))
+		remote.Yarns[i] = make([]atm.Atom, len(yarn))
 		copy(remote.Yarns[i], yarn)
 	}
 	copy(remote.Sitemap, t.Sitemap)

@@ -3,7 +3,7 @@ package crdt_test
 import (
 	"testing"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt"
 	"pgregory.net/rapid"
 )
 

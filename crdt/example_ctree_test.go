@@ -3,7 +3,7 @@ package crdt_test
 import (
 	"fmt"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt"
 )
 
 // Showcasing the main operations in a replicated list (CausalTree) data type.

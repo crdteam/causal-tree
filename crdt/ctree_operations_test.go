@@ -12,7 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt"
+	atm "github.com/crdteam/causal-tree/crdt/atom"
 )
 
 // Tests are structured as a sequence of operations on a list of trees.
@@ -357,7 +358,7 @@ func makeRandomTree(size int, r *rand.Rand) (*crdt.CausalTree, error) {
 				pos := r.Intn(n)
 				err = t.DeleteCharAt(pos)
 				n--
-			} else if t.Cursor != (crdt.AtomID{}) {
+			} else if t.Cursor != (atm.AtomID{}) {
 				err = t.DeleteChar()
 				n--
 			}
