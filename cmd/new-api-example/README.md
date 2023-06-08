@@ -1,5 +1,7 @@
 # API
 
+## Class diagram
+
 ```mermaid
 classDiagram
     class Container
@@ -31,37 +33,89 @@ classDiagram
     
     class Register
     <<interface>> Register
-    Register: SetString() *String
-    Register: SetCounter() *Counter
-    Register: SetList() *List
+    Register: SetString() String
+    Register: SetCounter() Counter
+    Register: SetList() List
     Register: Clear()
     Register: Value() Value
 
     class Char
-    String <-- Char
     Char: rune ch
     
     class StringCursor
-    String .. StringCursor
     Cursor <|.. StringCursor
-    StringCursor: Insert(rune ch) *Char
-    StringCursor: Value() *Char
+    StringCursor: Insert(rune ch) Char
+    StringCursor: Value() Char
     
     class ListCursor
     Cursor <|.. ListCursor
-    List .. ListCursor
-    ListCursor: Insert() *Element
-    ListCursor: Value() *Element
+    ListCursor: Insert() ListElement
+    ListCursor: Value() ListElement
     
-    class Element
-    List <-- Element
-    Register <|.. Element
+    class ListElement
+    Register <|.. ListElement
     
     class Counter
     Value <|.. Counter
     Counter: Snapshot() int32
     Counter: Increment(int32 x)
     Counter: Decrement(int32 x)
+```
+
+## Relationship diagrams
+
+```mermaid
+classDiagram
+    class CausalTree
+    CausalTree .. String
+    CausalTree .. Counter
+    CausalTree .. List
+    CausalTree: SetString() String
+    CausalTree: SetCounter() Counter
+    CausalTree: SetList() List
+    CausalTree: Clear()
+    CausalTree: Value() Value
+    
+    class ListElement
+    ListCursor --> ListElement
+    ListElement .. String
+    ListElement .. Counter
+    ListElement .. List
+    ListElement: SetString() String
+    ListElement: SetCounter() Counter
+    ListElement: SetList() List
+    ListElement: Clear()
+    ListElement: Value() Value
+
+    class String
+    String: Snapshot() str
+    String: Len() int
+    String: Cursor() StringCursor
+
+    class List
+    List: Snapshot() []any
+    List: Len() int
+    List: Cursor() ListCursor
+
+    class Counter
+    Counter: Snapshot() int32
+    Counter: Increment(int32 x)
+    Counter: Decrement(int32 x)
+
+    class StringCursor 
+    String --> StringCursor
+    StringCursor: Insert(rune ch) Char
+    StringCursor: Value() Char
+    
+    class ListCursor
+    List --> ListCursor
+    ListCursor: Insert() ListElement
+    ListCursor: Value() ListElement
+
+    
+    class Char
+    StringCursor --> Char
+    Char: rune ch
 ```
 
 ## Definitions
