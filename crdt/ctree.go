@@ -249,51 +249,6 @@ func mergeSitemaps(s1, s2 []uuid.UUID) []uuid.UUID {
 	return s
 }
 
-// Time complexity: O(atoms)
-func mergeWeaves(w1, w2 []atm.Atom) []atm.Atom {
-	var i, j int
-	var weave []atm.Atom
-	for i < len(w1) && j < len(w2) {
-		a1, a2 := w1[i], w2[j]
-		if a1 == a2 {
-			// Atoms are equal, append it to the weave.
-			weave = append(weave, a1)
-			i++
-			j++
-			continue
-		}
-		if a1.ID.Site == a2.ID.Site {
-			// Atoms are from the same site and can be compared by timestamp.
-			// Insert younger one (larger timestamp) in weave.
-			if a1.ID.Timestamp < a2.ID.Timestamp {
-				weave = append(weave, a2)
-				j++
-			} else {
-				weave = append(weave, a1)
-				i++
-			}
-		} else {
-			// Atoms are concurrent; append first causal block, according to heads' order.
-			if a1.Compare(a2) >= 0 {
-				n1 := i + causalBlockSize(w1[i:])
-				weave = append(weave, w1[i:n1]...)
-				i = n1
-			} else {
-				n2 := j + causalBlockSize(w2[j:])
-				weave = append(weave, w2[j:n2]...)
-				j = n2
-			}
-		}
-	}
-	if i < len(w1) {
-		weave = append(weave, w1[i:]...)
-	}
-	if j < len(w2) {
-		weave = append(weave, w2[j:]...)
-	}
-	return weave
-}
-
 // Merge updates the current state with that of another remote tree.
 // Note that merge does not move the cursor.
 //
@@ -357,7 +312,7 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 	for i, atom := range remote.Weave {
 		remoteWeave[i] = atom.RemapSite(remoteRemap)
 	}
-	t.Weave = mergeWeaves(t.Weave, remoteWeave)
+	t.Weave = atm.MergeWeaves(t.Weave, remoteWeave)
 
 	// Move created stuff to this tree.
 	t.Yarns = yarns
@@ -373,50 +328,6 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 	t.fixDeletedCursor()
 }
 
-// -----
-
-// Invokes the closure f with each atom of the causal block. Returns the number of atoms visited.
-//
-// The closure should return 'false' to cut the traversal short, as in a 'break' statement. Otherwise, return true.
-//
-// The causal block is defined as the contiguous range containing the head and all of its descendents.
-//
-// Time complexity: O(atoms), or, O(avg. block size)
-func walkCausalBlock(block []atm.Atom, f func(atm.Atom) bool) int {
-	if len(block) == 0 {
-		return 0
-	}
-	head := block[0]
-	for i, atom := range block[1:] {
-		if atom.Cause.Timestamp < head.ID.Timestamp {
-			// First atom whose parent has a lower timestamp (older) than head is the
-			// end of the causal block.
-			return i + 1
-		}
-		if !f(atom) {
-			break
-		}
-	}
-	return len(block)
-}
-
-// Invokes the closure f with each direct children of the block's head.
-//
-// The index i corresponds to the index on the causal block, not on the child's order.
-func walkChildren(block []atm.Atom, f func(atm.Atom) bool) {
-	walkCausalBlock(block, func(atom atm.Atom) bool {
-		if atom.Cause == block[0].ID {
-			return f(atom)
-		}
-		return true
-	})
-}
-
-// Returns the size of the causal block, including its head.
-func causalBlockSize(block []atm.Atom) int {
-	return walkCausalBlock(block, func(atom atm.Atom) bool { return true })
-}
-
 // Returns whether the atom is deleted.
 //
 // Time complexity: O(atoms), or, O(avg. block size)
@@ -426,7 +337,7 @@ func (t *CausalTree) isDeleted(atomID atm.AtomID) bool {
 		return false
 	}
 	var isDeleted bool
-	walkChildren(t.Weave[i:], func(child atm.Atom) bool {
+	atm.WalkChildren(t.Weave[i:], func(child atm.Atom) bool {
 		if _, ok := child.Value.(Delete); ok {
 			isDeleted = true
 			return false
@@ -626,7 +537,7 @@ func (t *CausalTree) insertAtomAtCursor(atom atm.Atom) {
 	// Weave indices:          c0        c1          c2           c3            end
 	c0 := t.atomIndex(t.Cursor)
 	var pos, i int
-	walkCausalBlock(t.Weave[c0:], func(a atm.Atom) bool {
+	atm.WalkCausalBlock(t.Weave[c0:], func(a atm.Atom) bool {
 		i++
 		if a.Cause == t.Cursor && a.Compare(atom) < 0 && pos == 0 {
 			// a is the first child smaller than atom.
@@ -690,7 +601,7 @@ func isContainer(atom atm.Atom) bool {
 // Deletes all the descendants of atom into the weave.
 // Time complexity: O(len(block))
 func deleteDescendants(block []atm.Atom, atomIndex int) {
-	causalBlockSz := causalBlockSize(block[atomIndex:])
+	causalBlockSz := atm.CausalBlockSize(block[atomIndex:])
 	for i := 0; i < causalBlockSz; i++ {
 		block[atomIndex+i] = atm.Atom{}
 	}
@@ -1005,7 +916,7 @@ func (t *CausalTree) ToJSON() ([]byte, error) {
 			elements = append(elements, string(value.Char))
 			i++
 		case InsertStr:
-			strSize := causalBlockSize(atoms[i:]) - 1
+			strSize := atm.CausalBlockSize(atoms[i:]) - 1
 			strChars := make([]rune, strSize)
 
 			for j, atom := range atoms[i+1 : i+strSize+1] {
@@ -1014,7 +925,7 @@ func (t *CausalTree) ToJSON() ([]byte, error) {
 			elements = append(elements, string(strChars))
 			i = i + strSize + 1
 		case InsertCounter:
-			counterSize := causalBlockSize(atoms[i:]) - 1
+			counterSize := atm.CausalBlockSize(atoms[i:]) - 1
 			var counterValue int32 = 0
 
 			for _, atom := range atoms[i+1 : i+counterSize+1] {
