@@ -637,10 +637,10 @@ func TestInsertCounterDomainCases(t *testing.T) {
 
 func TestValidateFuzzList(t *testing.T) {
 	f, err := os.Open("testdata/fuzz/FuzzList")
-	defer f.Close()
 	if err != nil {
 		t.Fatalf("error opening fuzz corpus directory: %v", err)
 	}
+	defer f.Close()
 	files, err := f.ReadDir(-1)
 	if err != nil {
 		t.Fatalf("error listing fuzz corpus: %v", err)
