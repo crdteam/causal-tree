@@ -1,6 +1,10 @@
 package atom
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/crdteam/causal-tree/src/utils/indexmap"
+)
 
 // Constants for max uint16 and uint32 values.
 const (
@@ -154,7 +158,7 @@ func TestAtomID_Compare(t *testing.T) {
 			name: "maximum timestamp, same site",
 			id: AtomID{
 				Site:      1,
-				Timestamp: ^uint32(0), // Maximum possible uint32 value
+				Timestamp: maxUint32,
 			},
 			other: AtomID{
 				Site:      1,
@@ -165,7 +169,7 @@ func TestAtomID_Compare(t *testing.T) {
 		{
 			name: "same timestamp, maximum site",
 			id: AtomID{
-				Site:      ^uint16(0), // Maximum possible uint16 value
+				Site:      maxUint16,
 				Timestamp: 1,
 			},
 			other: AtomID{
@@ -182,6 +186,109 @@ func TestAtomID_Compare(t *testing.T) {
 			got := tc.id.Compare(tc.other)
 			if got != tc.expect {
 				t.Errorf("expected %d, got %d", tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestAtomID_RemapSite(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name       string
+		id         AtomID
+		indexMap   indexmap.IndexMap
+		expectSite uint16
+	}{
+		{
+			name: "no remap",
+			id: AtomID{
+				Site:      1,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap:   indexmap.IndexMap{},
+			expectSite: 1,
+		},
+		{
+			name: "remap site 1 to 2",
+			id: AtomID{
+				Site:      1,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				1: 2,
+			},
+			expectSite: 2,
+		},
+		{
+			name: "remap site 2 to 1, original site is 1",
+			id: AtomID{
+				Site:      1,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				2: 1,
+			},
+			expectSite: 1,
+		},
+		{
+			name: "remap site 2 to 1, original site is 2",
+			id: AtomID{
+				Site:      2,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				2: 1,
+			},
+			expectSite: 1,
+		},
+		{
+			name: "remap site 0 to 65535",
+			id: AtomID{
+				Site:      0,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				0: 65535,
+			},
+			expectSite: 65535,
+		},
+		{
+			name: "remap site 65535 to 0",
+			id: AtomID{
+				Site:      maxUint16,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				int(maxUint16): 0,
+			},
+			expectSite: 0,
+		},
+		{
+			name: "remap site 32768 to 32767",
+			id: AtomID{
+				Site:      32768,
+				Index:     1,
+				Timestamp: 1,
+			},
+			indexMap: indexmap.IndexMap{
+				32768: 32767,
+			},
+			expectSite: 32767,
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.id.RemapSite(tc.indexMap)
+			if got.Site != tc.expectSite {
+				t.Errorf("expected site %d, got %d", tc.expectSite, got.Site)
 			}
 		})
 	}

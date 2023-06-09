@@ -3,7 +3,6 @@ package indexmap
 // +---------------+
 // | Remap indices |
 // +---------------+
-// TODO separate this type IndexMap to another package: its own package: indexmap
 
 // Map storing conversion between indices.
 // Conversion from an index to itself are not stored.

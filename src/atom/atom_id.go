@@ -77,6 +77,10 @@ func (id AtomID) Compare(other AtomID) int {
 // | Remap indices |
 // +---------------+
 
+/*
+	RemapSite remaps the site index of an AtomID using the given index map.
+	It returns a new AtomID with the remapped site index.
+*/
 func (id AtomID) RemapSite(m indexmap.IndexMap) AtomID {
 	return AtomID{
 		Site:      uint16(m.Get(int(id.Site))),
