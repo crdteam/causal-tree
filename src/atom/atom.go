@@ -41,6 +41,22 @@ func (a Atom) String() string {
 // +----------+
 
 // Compare returns the relative order between atoms.
+
+/*
+	This method returns the relative order between atoms.
+	Atoms are ordered by priority, then by ID. The priority is defined by the
+	AtomValue interface.
+
+	Atoms with a lower priority are considered to be "older" than atoms with a
+	higher priority.
+
+	Return
+
+	Values returned:
+		- +1 if a > other
+		- -1 if a < other
+		- 0 if a == other
+*/
 func (a Atom) Compare(other Atom) int {
 	// Ascending according to priority.
 	if a.Value.AtomPriority() < other.Value.AtomPriority() {

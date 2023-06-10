@@ -411,3 +411,120 @@ func TestAtom_String(t *testing.T) {
 		})
 	}
 }
+
+func TestAtom_Compare(t *testing.T) {
+	testCases := []struct {
+		name string
+		a    Atom
+		b    Atom
+		want int
+	}{
+		{
+			name: "atom a has higher priority than atom b",
+			a: Atom{
+				ID:    AtomID{Site: 1, Index: 2, Timestamp: 3},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 2},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 7, Index: 8, Timestamp: 9},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: 1,
+		},
+		{
+			name: "atom a has lower priority than atom b",
+			a: Atom{
+				ID:    AtomID{Site: 1, Index: 2, Timestamp: 3},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 7, Index: 8, Timestamp: 9},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 2},
+			},
+			want: -1,
+		},
+		{
+			name: "atom a and atom b have equal priorities, atom a has smaller timestamp",
+			a: Atom{
+				ID:    AtomID{Site: 1, Index: 2, Timestamp: 3},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 7, Index: 8, Timestamp: 4},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: -1,
+		},
+		{
+			name: "atom a and atom b have equal priorities, atom a has later timestamp",
+			a: Atom{
+				ID:    AtomID{Site: 1, Index: 2, Timestamp: 5},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 7, Index: 8, Timestamp: 4},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: 1,
+		},
+		{
+			name: "atom a and atom b have equal priorities and timestamps, atom a has smaller site",
+			a: Atom{
+				ID:    AtomID{Site: 1, Index: 2, Timestamp: 4},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 7, Index: 8, Timestamp: 4},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: 1,
+		},
+		{
+			name: "atom a and atom b have equal priorities and timestamps, atom a has greater site",
+			a: Atom{
+				ID:    AtomID{Site: 3, Index: 2, Timestamp: 4},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 2, Index: 8, Timestamp: 4},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: -1,
+		},
+		{
+			name: "atom a and atom b have equal priorities and timestamps, and site",
+			a: Atom{
+				ID:    AtomID{Site: 3, Index: 2, Timestamp: 4},
+				Cause: AtomID{Site: 4, Index: 5, Timestamp: 6},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			b: Atom{
+				ID:    AtomID{Site: 3, Index: 8, Timestamp: 4},
+				Cause: AtomID{Site: 10, Index: 11, Timestamp: 12},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			want: 0,
+		},
+	}
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.a.Compare(tc.b)
+			if got != tc.want {
+				t.Errorf("expected %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
