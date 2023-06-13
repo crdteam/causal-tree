@@ -71,3 +71,45 @@ func TestIndexMap_Set(t *testing.T) {
 		})
 	}
 }
+
+func TestIndexMap_Get(t *testing.T) {
+	testCases := []struct {
+		name         string
+		baseIndexMap IndexMap
+		input        int
+		expected     int
+	}{
+		{
+			name:         "empty indexmap",
+			baseIndexMap: IndexMap{},
+			input:        1,
+			expected:     1,
+		},
+		{
+			name:         "indexmap with mapped indices, querying mapped index",
+			baseIndexMap: IndexMap{1: 2, 3: 4},
+			input:        1,
+			expected:     2,
+		},
+		{
+			name:         "indexmap with mapped indices, querying non-mapped index",
+			baseIndexMap: IndexMap{1: 2, 3: 4},
+			input:        5,
+			expected:     5,
+		},
+		{
+			name:         "non-empty indexmap without queried index",
+			baseIndexMap: IndexMap{3: 3},
+			input:        1,
+			expected:     1,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.baseIndexMap.Get(tc.input)
+			if actual != tc.expected {
+				t.Errorf("expected %v but got %v", tc.expected, actual)
+			}
+		})
+	}
+}
