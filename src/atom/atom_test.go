@@ -528,3 +528,215 @@ func TestAtom_Compare(t *testing.T) {
 		})
 	}
 }
+
+func TestAtom_RemapSite(t *testing.T) {
+	testCases := []struct {
+		name     string
+		atom     Atom
+		indexMap indexmap.IndexMap
+		want     Atom
+	}{
+		{
+			name: "remap site 1 to 2",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      1,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{
+				1: 2,
+			},
+			want: Atom{
+				ID: AtomID{
+					Site:      2,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+		{
+			name: "empty index map",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      1,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{},
+			want: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      1,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+		{
+			name: "different site and cause site, both in index map",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{
+				1: 3,
+				2: 4,
+			},
+			want: Atom{
+				ID: AtomID{
+					Site:      3,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      4,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+		{
+			name: "only site in index map",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{
+				1: 3,
+			},
+			want: Atom{
+				ID: AtomID{
+					Site:      3,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+		{
+			name: "only cause site in index map",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{
+				2: 3,
+			},
+			want: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      3,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+		{
+			name: "site and cause site not in index map",
+			atom: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+			indexMap: indexmap.IndexMap{
+				3: 4,
+			},
+			want: Atom{
+				ID: AtomID{
+					Site:      1,
+					Index:     2,
+					Timestamp: 1,
+				},
+				Cause: AtomID{
+					Site:      2,
+					Index:     1,
+					Timestamp: 1,
+				},
+				Value: DummyAtomValue{Priority: 1},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.atom.RemapSite(tc.indexMap)
+			if got.ID.Site != tc.want.ID.Site {
+				t.Errorf("expected site %d, got %d", tc.want.ID.Site, got.ID.Site)
+			}
+			if got.Cause.Site != tc.want.Cause.Site {
+				t.Errorf("expected site %d, got %d", tc.want.Cause.Site, got.Cause.Site)
+			}
+		})
+	}
+}

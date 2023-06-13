@@ -73,9 +73,32 @@ func (a Atom) Compare(other Atom) int {
 // +---------------+
 
 /*
+	RemapSite returns a copy of the atom with the indices remapped according to
+	the given index map. The index map is used to remap the atom's ID and Cause
+	fields. The Value field is kept unchanged.
 
+	Parameters
 
- */
+	- m: the index map to use for remapping.
+
+	Return
+
+	- the remapped atom.
+
+	Example
+
+	Consider the following atom:
+
+		Atom(ID=AtomID(Site=1,Index=2),Cause=AtomID(Site=1,Index=1),Value=...)
+
+	And the following index map:
+
+		IndexMap{1: 2, 2: 1}
+
+	The remapped atom will be:
+
+		Atom(ID=AtomID(Site=2,Index=1),Cause=AtomID(Site=2,Index=2),Value=...)
+*/
 func (a Atom) RemapSite(m indexmap.IndexMap) Atom {
 	return Atom{
 		ID:    a.ID.RemapSite(m),
