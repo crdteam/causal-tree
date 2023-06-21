@@ -9,6 +9,25 @@ import (
 	"github.com/crdteam/causal-tree/src/utils/indexmap"
 )
 
+/*--------------------------------Aux Functions-------------------------------*/
+type DummyAtomValue struct {
+	Priority int
+}
+
+func (d DummyAtomValue) AtomPriority() int {
+	return d.Priority
+}
+
+func (d DummyAtomValue) ValidateChild(child AtomValue) error {
+	return nil
+}
+
+func (d DummyAtomValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.Priority)
+}
+
+/*----------------------------------------------------------------------------*/
+
 // +---------------+
 // | Atom ID tests |
 // +---------------+
@@ -20,40 +39,24 @@ func TestAtomID_String(t *testing.T) {
 		want   string
 	}{
 		{
-			name: "Case 1: Site is 1 and Timestamp is 2",
-			atomID: AtomID{
-				Site:      1,
-				Index:     0,
-				Timestamp: 2,
-			},
-			want: "S1@T02",
+			name:   "Case 1: Site is 1 and Timestamp is 2",
+			atomID: AtomID{Site: 1, Index: 0, Timestamp: 2},
+			want:   "S1@T02",
 		},
 		{
-			name: "Case 2: Site is 3 and Timestamp is 4",
-			atomID: AtomID{
-				Site:      3,
-				Index:     1,
-				Timestamp: 4,
-			},
-			want: "S3@T04",
+			name:   "Case 2: Site is 3 and Timestamp is 4",
+			atomID: AtomID{Site: 3, Index: 1, Timestamp: 4},
+			want:   "S3@T04",
 		},
 		{
-			name: "StandardCase",
-			atomID: AtomID{
-				Site:      1,
-				Index:     2,
-				Timestamp: 3,
-			},
-			want: "S1@T03",
+			name:   "StandardCase",
+			atomID: AtomID{Site: 1, Index: 2, Timestamp: 3},
+			want:   "S1@T03",
 		},
 		{
-			name: "ZeroCase",
-			atomID: AtomID{
-				Site:      0,
-				Index:     0,
-				Timestamp: 0,
-			},
-			want: "S0@T00",
+			name:   "ZeroCase",
+			atomID: AtomID{Site: 0, Index: 0, Timestamp: 0},
+			want:   "S0@T00",
 		},
 		{
 			name: "MaxUint16Case",
@@ -298,22 +301,6 @@ func TestAtomID_RemapSite(t *testing.T) {
 // +----------------+
 // | Atom tests     |
 // +----------------+
-
-type DummyAtomValue struct {
-	Priority int
-}
-
-func (d DummyAtomValue) AtomPriority() int {
-	return d.Priority
-}
-
-func (d DummyAtomValue) ValidateChild(child AtomValue) error {
-	return nil
-}
-
-func (d DummyAtomValue) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Priority)
-}
 
 func TestAtom_String(t *testing.T) {
 	// Define test cases
@@ -736,6 +723,141 @@ func TestAtom_RemapSite(t *testing.T) {
 			}
 			if got.Cause.Site != tc.want.Cause.Site {
 				t.Errorf("expected site %d, got %d", tc.want.Cause.Site, got.Cause.Site)
+			}
+		})
+	}
+}
+
+// +-----------------+
+// | functions tests |
+// +-----------------+
+
+// TODO make the test creation process more compact: example -> creating atoms in a more compact way
+func TestFunctions_WalkCausalBlock(t *testing.T) {
+	testCases := []struct {
+		name  string
+		block []Atom
+		f     func(Atom) bool
+		want  int
+	}{
+		{
+			name:  "empty block",
+			block: []Atom{},
+			f: func(Atom) bool {
+				return true
+			},
+			want: 0,
+		},
+		{
+			name: "one atom block",
+			block: []Atom{
+				{
+					ID: AtomID{
+						Timestamp: 1,
+					},
+				},
+			},
+			f: func(Atom) bool {
+				return true
+			},
+			want: 1,
+		},
+		{
+			name: "multiple atoms, none causing the walk to stop",
+			block: []Atom{
+				{
+					ID: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 2,
+					},
+					Cause: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 3,
+					},
+					Cause: AtomID{
+						Timestamp: 2,
+					},
+				},
+			},
+			f: func(Atom) bool {
+				return true
+			},
+			want: 3,
+		},
+		{
+			name: "multiple atoms, one causing the walk to stop",
+			block: []Atom{
+				{
+					ID: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 2,
+					},
+					Cause: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 3,
+					},
+					Cause: AtomID{
+						Timestamp: 0, // this atom will cause the walk to stop
+					},
+				},
+			},
+			f: func(Atom) bool {
+				return true
+			},
+			want: 2,
+		},
+		{
+			name: "function f returns false",
+			block: []Atom{
+				{
+					ID: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 2,
+					},
+					Cause: AtomID{
+						Timestamp: 1,
+					},
+				},
+				{
+					ID: AtomID{
+						Timestamp: 3,
+					},
+					Cause: AtomID{
+						Timestamp: 2,
+					},
+				},
+			},
+			f: func(Atom) bool {
+				return false // this function will cause the walk to stop
+			},
+			want: 1,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := WalkCausalBlock(tc.block, tc.f)
+			if got != tc.want {
+				t.Errorf("expected %d, got %d", tc.want, got)
 			}
 		})
 	}

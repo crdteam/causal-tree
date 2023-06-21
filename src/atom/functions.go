@@ -2,29 +2,63 @@ package atom
 
 // -----
 
-// Invokes the closure f with each atom of the causal block. Returns the number of atoms visited.
-//
-// The closure should return 'false' to cut the traversal short, as in a 'break' statement. Otherwise, return true.
-//
-// The causal block is defined as the contiguous range containing the head and all of its descendents.
-//
-// Time complexity: O(atoms), or, O(avg. block size)
+/*
+	WalkCausalBlock traverses a block of atoms and applies a given function to
+	each atom in the causal block. It returns the number of atoms visited, including
+	the block head, during
+	its execution (in other words, the number of atoms in which the closure
+	function returned true). The closure function should return false to
+	cut the traversal short, as in a break statement. Otherwise, return true.
+
+
+	Stop Condition
+
+	The function will stop under two conditions:
+
+	1. If the function (f) applied to an atom returns 'false'. This is similar
+	to a 'break' statement in a loop.
+
+	2. If it encounters an atom whose cause's timestamp is less than the head's
+	timestamp. This is because such an atom is not considered part of the causal
+	block.
+
+	Parameters
+
+	- block ([]Atom): a slice of atoms. The causal block is defined as the contiguous range
+	containing the head and all of its descendants. The head of the block is the first atom
+	in the slice, and descendants are those atoms whose cause's timestamp is equal or greater
+	than the head's timestamp.
+
+	- f (func(Atom) bool): a function that takes an atom as input and returns a boolean
+
+	Returns
+
+	- (int): the number of atoms visited during the execution of the function. If the block is empty,
+	the function returns 0.
+
+	Time Complexity
+
+	O(atoms), or equivalently O(avg. block size)
+
+*/
 func WalkCausalBlock(block []Atom, f func(Atom) bool) int {
 	if len(block) == 0 {
 		return 0
 	}
 	head := block[0]
-	for i, atom := range block[1:] {
+	i := 1
+	for ; i < len(block); i++ {
+		atom := block[i]
 		if atom.Cause.Timestamp < head.ID.Timestamp {
 			// First atom whose parent has a lower timestamp (older) than head is the
 			// end of the causal block.
-			return i + 1
+			return i
 		}
 		if !f(atom) {
 			break
 		}
 	}
-	return len(block)
+	return i
 }
 
 // Invokes the closure f with each direct children of the block's head.
