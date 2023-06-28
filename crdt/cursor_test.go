@@ -149,7 +149,7 @@ func TestStringCursor(t *testing.T) {
 				// Delete string.
 				{op: deleteCharAt, pos: 0},
 			},
-			"crdt",
+			"",
 			crdt.AtomID{0, 0, 2},
 		},
 	}
