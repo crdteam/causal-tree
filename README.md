@@ -43,3 +43,9 @@ To run all the test packages of the project, execute the following command from 
 
     $ go test ./...
 
+To view code coverage, run the following and open `coverage.html` in your browser.
+
+```sh
+    go test ./... -coverprofile=coverage.out
+    go tool cover -html=coverage.out -o coverage.html
+```
