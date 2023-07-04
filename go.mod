@@ -16,5 +16,5 @@ require (
 require (
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
-	pgregory.net/rapid v0.4.8 // indirect
+	pgregory.net/rapid v1.0.0 // indirect
 )
