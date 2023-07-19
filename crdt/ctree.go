@@ -967,7 +967,7 @@ func (t *CausalTree) DeleteAt(i int) error {
 // | Operations - Insert str container |
 // +-----------------------------------+
 
-//Inserts a string container as a child of the root atom.
+// Inserts a string container as a child of the root atom.
 type InsertStr struct{}
 
 func (v InsertStr) AtomPriority() int { return insertStrPriority }
@@ -998,7 +998,7 @@ func (t *CausalTree) InsertStr() error {
 // | Operations - Insert Add atom |
 // +------------------------------+
 
-//Inserts an add atom as a child of the atom pointed by cursor.
+// Inserts an add atom as a child of the atom pointed by cursor.
 type InsertAdd struct {
 	//Value inserted into the counter container
 	Value int32
@@ -1011,7 +1011,7 @@ func (v InsertAdd) MarshalJSON() ([]byte, error) {
 
 func (v InsertAdd) String() string { return strconv.FormatInt(int64(v.Value), 10) }
 
-//InsertAdd atoms only accept child of type InsertAdd.
+// InsertAdd atoms only accept child of type InsertAdd.
 func (v InsertAdd) ValidateChild(child AtomValue) error {
 	switch child.(type) {
 	case InsertAdd:
@@ -1043,7 +1043,7 @@ func (t *CausalTree) InsertAddAt(val int32, i int) error {
 // | Operations - Insert counter container |
 // +---------------------------------------+
 
-//Inserts a counter container as a child of the root atom.
+// Inserts a counter container as a child of the root atom.
 type InsertCounter struct{}
 
 func (v InsertCounter) AtomPriority() int { return insertCounterPriority }
