@@ -61,7 +61,7 @@ type Value interface {
 // speed up searching for it. Since trees are insert-only, the atom can only be at this
 // position or to its right.
 type treePosition struct {
-	// ID ...
+	// ID is the underlying atom ID for this struct.
 	ID AtomID
 
 	t            *CausalTree
@@ -333,7 +333,7 @@ func (t *CausalTree) StringValue(atomID AtomID) (*String, error) {
 
 // SetString sets the tree register to a new string and returns it.
 func (t *CausalTree) SetString() (*String, error) {
-	// TODO: change implementation once we remove internal cursor from CausalTree.
+	// TODO: change implementation to remove internal cursor from CausalTree.
 	if err := t.InsertStr(); err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (t *CausalTree) SetString() (*String, error) {
 
 // DeleteAtom deletes the given atom from the tree.
 func (t *CausalTree) DeleteAtom(atomID AtomID) error {
-	// TODO: change implementation once we remove internal cursor from CausalTree.
+	// TODO: change implementation to remove internal cursor from CausalTree.
 	t.Cursor = atomID
 	return t.Delete()
 }
