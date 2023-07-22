@@ -344,7 +344,7 @@ func (t *CausalTree) SetString() (*String, error) {
 func (t *CausalTree) DeleteAtom(atomID AtomID) error {
 	// TODO: change implementation once we remove internal cursor from CausalTree.
 	t.Cursor = atomID
-	return t.DeleteChar()
+	return t.Delete()
 }
 
 // TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.

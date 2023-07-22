@@ -190,9 +190,3 @@ func TestMultipleRunesProperty(t *testing.T) {
 		t.Repeat(rapid.StateMachineActions(newMultipleRunesModel()))
 	})
 }
-
-func FuzzMultipleRunesProperty(f *testing.F) {
-	f.Fuzz(rapid.MakeFuzz(func(t *rapid.T) {
-		t.Repeat(rapid.StateMachineActions(newMultipleRunesModel()))
-	}))
-}
