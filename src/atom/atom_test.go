@@ -505,7 +505,6 @@ func TestAtom_RemapSite(t *testing.T) {
 // | functions tests |
 // +-----------------+
 
-// TODO make the test creation process more compact: example -> creating atoms in a more compact way
 func TestFunctions_WalkCausalBlock(t *testing.T) {
 	testCases := []struct {
 		name  string
@@ -604,4 +603,60 @@ func TestFunctions_WalkCausalBlock(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFunctions_WalkChildren(t *testing.T) {
+	testCases := []struct {
+		name     string
+		block    []Atom
+		expected int
+	}{
+		{
+			name:     "empty block",
+			block:    []Atom{},
+			expected: 0,
+		},
+		{
+			name: "one atom block",
+			block: []Atom{
+				{
+					ID: AtomID{Timestamp: 1},
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "multiple atoms",
+			block: []Atom{
+				{
+					ID: AtomID{Timestamp: 1},
+				},
+				{
+					ID:    AtomID{Timestamp: 2},
+					Cause: AtomID{Timestamp: 1},
+				},
+				{
+					ID:    AtomID{Timestamp: 3},
+					Cause: AtomID{Timestamp: 1},
+				},
+			},
+			expected: 2,
+		},
+	}
+
+	var num_of_children int
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			num_of_children = 0
+			WalkChildren(tc.block, func(atom Atom) bool {
+				num_of_children++
+				return true
+			})
+			if num_of_children != tc.expected {
+				t.Errorf("expected %d children, got %d", tc.expected, num_of_children)
+			}
+
+		})
+	}
+
 }
