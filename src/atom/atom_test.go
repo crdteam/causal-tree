@@ -660,3 +660,57 @@ func TestFunctions_WalkChildren(t *testing.T) {
 	}
 
 }
+
+func TestFunctions_CausalBlockSize(t *testing.T) {
+	testCases := []struct {
+		name     string
+		block    []Atom
+		expected int
+	}{
+		{
+			name:     "empty block",
+			block:    []Atom{},
+			expected: 0,
+		},
+		{
+			name: "one atom block",
+			block: []Atom{
+				{
+					ID: AtomID{Timestamp: 1},
+				},
+			},
+			expected: 1,
+		},
+		{
+			name: "multiple atoms",
+			block: []Atom{
+				{
+					ID: AtomID{Timestamp: 1},
+				},
+				{
+					ID:    AtomID{Timestamp: 2},
+					Cause: AtomID{Timestamp: 1},
+				},
+				{
+					ID:    AtomID{Timestamp: 3},
+					Cause: AtomID{Timestamp: 1},
+				},
+				{
+					ID:    AtomID{Timestamp: 4},
+					Cause: AtomID{Timestamp: 2},
+				},
+			},
+			expected: 4,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			blockSize := CausalBlockSize(tc.block)
+			if blockSize != tc.expected {
+				t.Error("expected", tc.expected, "got", blockSize)
+			}
+
+		})
+
+	}
+}
