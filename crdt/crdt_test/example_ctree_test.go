@@ -3,8 +3,8 @@ package crdt_test
 import (
 	"fmt"
 
-	ctree "github.com/crdteam/causal-tree/src/causal_tree"
-	wft "github.com/crdteam/causal-tree/src/weft"
+	ctree "github.com/crdteam/causal-tree/crdt/causal_tree"
+	wft "github.com/crdteam/causal-tree/crdt/weft"
 )
 
 // Showcasing the main operations in a replicated list (CausalTree) data type.

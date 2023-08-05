@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	atm "github.com/crdteam/causal-tree/src/atom"
+	atm "github.com/crdteam/causal-tree/crdt/atom"
 )
 
 // +--------------------------+

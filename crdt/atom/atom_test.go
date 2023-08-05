@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/crdteam/causal-tree/src/utils/indexmap"
+	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
 )
 
 /*--------------------------------Aux Functions-------------------------------*/

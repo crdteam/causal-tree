@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	ctree "github.com/crdteam/causal-tree/src/causal_tree"
-	wft "github.com/crdteam/causal-tree/src/weft"
+	ctree "github.com/crdteam/causal-tree/crdt/causal_tree"
+	wft "github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
 

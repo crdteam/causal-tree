@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode"
 
-	atm "github.com/crdteam/causal-tree/src/atom"
+	atm "github.com/crdteam/causal-tree/crdt/atom"
 )
 
 // Invokes the closure f for each atom of the causal block, including the head and except for Deletes.

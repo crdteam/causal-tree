@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	atm "github.com/crdteam/causal-tree/src/atom"
-	ctree "github.com/crdteam/causal-tree/src/causal_tree"
+	atm "github.com/crdteam/causal-tree/crdt/atom"
+	ctree "github.com/crdteam/causal-tree/crdt/causal_tree"
 )
 
 // Tests are structured as a sequence of operations on a list of trees.

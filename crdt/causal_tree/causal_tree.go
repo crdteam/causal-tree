@@ -8,11 +8,11 @@ import (
 	"math"
 	"sort"
 
-	atm "github.com/crdteam/causal-tree/src/atom"
-	"github.com/crdteam/causal-tree/src/utils/conversion"
-	"github.com/crdteam/causal-tree/src/utils/generate_uuid_elements"
-	"github.com/crdteam/causal-tree/src/utils/indexmap"
-	wft "github.com/crdteam/causal-tree/src/weft"
+	atm "github.com/crdteam/causal-tree/crdt/atom"
+	"github.com/crdteam/causal-tree/crdt/utils/conversion"
+	"github.com/crdteam/causal-tree/crdt/utils/generate_uuid_elements"
+	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
+	wft "github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
 
