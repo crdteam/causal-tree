@@ -49,3 +49,9 @@ To view code coverage, run the following and open `coverage.html` in your browse
     go test ./... -coverprofile=coverage.out
     go tool cover -html=coverage.out -o coverage.html
 ```
+
+You can run [Rapid](https://github.com/flyingmutant/rapid) property tests with many more checks to root out
+buggy behavior like a fuzzer:
+
+    $ go test ./... -rapid.checks=10_000
+
