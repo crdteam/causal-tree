@@ -63,20 +63,22 @@ type Value interface {
 // speed up searching for it. Since trees are insert-only, the atom can only be at this
 // position or to its right.
 type treePosition struct {
+	// ID is the underlying atom ID for this struct.
+	ID atm.AtomID
+
 	t            *CausalTree
-	atomID       atm.AtomID
 	lastKnownPos int
 }
 
 func (p *treePosition) atomIndex() int {
 	size := len(p.t.Weave)
 	for i := p.lastKnownPos; i < size; i++ {
-		if p.t.Weave[i].ID == p.atomID {
+		if p.t.Weave[i].ID == p.ID {
 			p.lastKnownPos = i
 			return i
 		}
 	}
-	panic(fmt.Sprintf("atomID %v not found after position %d (weave size: %d)", p.atomID, p.lastKnownPos, size))
+	panic(fmt.Sprintf("atomID %v not found after position %d (weave size: %d)", p.ID, p.lastKnownPos, size))
 }
 
 func (p *treePosition) walk(f func(pos int, atom atm.Atom, isDeleted bool) bool) {
@@ -95,7 +97,7 @@ func (s *String) walkChars(f func(i int, atom atm.Atom, isDeleted bool) bool) {
 	s.walk(func(pos int, atom atm.Atom, isDeleted bool) bool {
 		switch atom.Value.(type) {
 		case InsertStr:
-			return !isDeleted
+			return true
 		case InsertChar:
 			return f(pos, atom, isDeleted)
 		default:
@@ -118,7 +120,7 @@ func (s *String) IsDeleted() bool {
 }
 
 // Snapshot returns the string represented by the atom.
-// Returns the empty string if string was deleted.
+// Ignores whether the string was deleted.
 func (s *String) Snapshot() string {
 	var chars []rune
 	s.walkChars(func(pos int, atom atm.Atom, isDeleted bool) bool {
@@ -131,7 +133,7 @@ func (s *String) Snapshot() string {
 }
 
 // Len returns the size of the string (in codepoints).
-// Returns 0 if string was deleted.
+// Ignores whether the string was deleted.
 func (s *String) Len() int {
 	var size int
 	s.walkChars(func(pos int, atom atm.Atom, isDeleted bool) bool {
@@ -184,27 +186,27 @@ func (cur *StringCursor) GetString() *String {
 			break
 		}
 	}
-	if headPos < 0 {
-		panic("invalid weave")
-	}
 	return &String{
 		treePosition{
+			ID:           cur.t.Weave[headPos].ID,
 			t:            cur.t,
-			atomID:       cur.t.Weave[headPos].ID,
 			lastKnownPos: headPos,
 		},
 	}
 }
 
 // Index moves the cursor to the given string position.
-// Returns an error if index is out of range [-1:Len()-1], or string is deleted.
+// Returns an error if index is out of range [-1:Len()-1]. Ignores whether string is deleted.
 func (cur *StringCursor) Index(i int) error {
 	if i < -1 {
 		return fmt.Errorf("out of bounds")
 	}
 	s := cur.GetString()
-	if s.IsDeleted() {
-		return fmt.Errorf("string is deleted")
+	if i == -1 {
+		// Move cursor to string head.
+		cur.ID = s.ID
+		cur.lastKnownPos = s.lastKnownPos
+		return nil
 	}
 	// Walk the string starting from head to find the char at position i.
 	indexPos := -1
@@ -214,6 +216,7 @@ func (cur *StringCursor) Index(i int) error {
 			return true
 		}
 		if count == i {
+			// Found the i-th char, break.
 			indexPos = pos
 			return false
 		}
@@ -223,7 +226,7 @@ func (cur *StringCursor) Index(i int) error {
 	if indexPos == -1 {
 		return fmt.Errorf("out of bounds")
 	}
-	cur.atomID = cur.t.Weave[indexPos].ID
+	cur.ID = cur.t.Weave[indexPos].ID
 	cur.lastKnownPos = indexPos
 	return nil
 }
@@ -243,6 +246,76 @@ func (cur *StringCursor) Value() (rune, error) {
 	}
 }
 
+// Insert inserts a new character after the cursor.
+// The cursor is moved to the new character.
+// Returns an error if atom insertion failed.
+func (cur *StringCursor) Insert(ch rune) (*Char, error) {
+	pos := cur.atomIndex()
+	atomPos, err := cur.t.addAtom2(pos, InsertChar{ch})
+	if err != nil {
+		return nil, err
+	}
+	// Move cursor to new atom.
+	cur.lastKnownPos = atomPos
+	cur.ID = cur.t.Weave[atomPos].ID
+	return &Char{cur.treePosition, cur.lastKnownHeadPos}, nil
+}
+
+// Delete removes the character pointed by the cursor.
+// Returns an error if cursor is pointing to the string head.
+func (cur *StringCursor) Delete() error {
+	pos := cur.atomIndex()
+	atom := cur.t.Weave[pos]
+	if _, ok := atom.Value.(InsertStr); ok {
+		return fmt.Errorf("out of bounds")
+	}
+	if _, err := cur.t.addAtom2(pos, Delete{}); err != nil {
+		return err
+	}
+	// Fix cursor position, moving it one to the left.
+	// In this sense, "delete" is like the backspace key.
+	//    v
+	// abcdef
+	//   v
+	// abcef
+	//  v
+	// abef
+	s := cur.GetString()
+	prevPos := cur.lastKnownHeadPos
+	s.walkChars(func(pos int, atom atm.Atom, isDeleted bool) bool {
+		if atom.ID == cur.ID {
+			prev := cur.t.Weave[prevPos]
+			cur.ID = prev.ID
+			cur.lastKnownPos = prevPos
+			return false
+		}
+		if !isDeleted {
+			prevPos = pos
+		}
+		return true
+	})
+	return nil
+}
+
+// ---- String char
+
+// Char is an immutable tree location, pointing to an InsertChar atom.
+type Char struct {
+	treePosition
+
+	// Store the last known position of the string's head, e.g., InsertStr atom.
+	lastKnownHeadPos int
+}
+
+func (ch *Char) Snapshot() rune {
+	pos := ch.atomIndex()
+	return ch.t.Weave[pos].Value.(InsertChar).Char
+}
+
+// TODO: (*Char).IsDeleted() bool
+// TODO: (*Char).GetString() *String
+// TODO: (*Char).GetStringCursor() *StringCursor
+
 // ---- CausalTree methods
 
 // StringValue returns a wrapper over InsertStr.
@@ -253,8 +326,80 @@ func (t *CausalTree) StringValue(atomID atm.AtomID) (*String, error) {
 		return nil, fmt.Errorf("%v is not an InsertStr atom: %T (%v)", atomID, atom, atom)
 	}
 	return &String{treePosition{
+		ID:           atomID,
 		t:            t,
-		atomID:       atomID,
-		lastKnownPos: t.atomIndex(atomID),
+		lastKnownPos: i,
 	}}, nil
+}
+
+// SetString sets the tree register to a new string and returns it.
+func (t *CausalTree) SetString() (*String, error) {
+	// TODO: change implementation to remove internal cursor from CausalTree.
+	if err := t.InsertStr(); err != nil {
+		return nil, err
+	}
+	return t.StringValue(t.Cursor)
+}
+
+// DeleteAtom deletes the given atom from the tree.
+func (t *CausalTree) DeleteAtom(atomID atm.AtomID) error {
+	// TODO: change implementation to remove internal cursor from CausalTree.
+	t.Cursor = atomID
+	return t.Delete()
+}
+
+// TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.
+//
+// This is a copy of addAtom, but using the known position of the cause.
+func (t *CausalTree) addAtom2(causePos int, value atm.AtomValue) (int, error) {
+	t.Timestamp++
+	if t.Timestamp == 0 {
+		// Overflow
+		return -1, ErrStateLimitExceeded
+	}
+	var causeID atm.AtomID
+	if causePos >= 0 {
+		cause := t.Weave[causePos]
+		causeID = cause.ID
+		if err := cause.Value.ValidateChild(value); err != nil {
+			return -1, err
+		}
+	}
+	i := siteIndex(t.Sitemap, t.SiteID)
+	atomID := atm.AtomID{
+		Site:      uint16(i),
+		Index:     uint32(len(t.Yarns[i])),
+		Timestamp: t.Timestamp,
+	}
+	atom := atm.Atom{
+		ID:    atomID,
+		Cause: causeID,
+		Value: value,
+	}
+	atomPos := t.insertAtomAtCursor2(causePos, atom)
+	t.Yarns[i] = append(t.Yarns[i], atom)
+	return atomPos, nil
+}
+
+// TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.
+//
+// This is a copy of insertAtomAtCursor, but using the known position of the cause.
+func (t *CausalTree) insertAtomAtCursor2(causePos int, atom atm.Atom) int {
+	if causePos < 0 {
+		// Cursor is at initial position.
+		t.insertAtom(atom, 0)
+		return 0
+	}
+	causeID := t.Weave[causePos].ID
+	insertPos := causePos + 1
+	atm.WalkCausalBlock(t.Weave[causePos:], func(a atm.Atom) bool {
+		if a.Cause == causeID && a.Compare(atom) < 0 {
+			// a is the first child smaller than atom, break.
+			return false
+		}
+		insertPos++
+		return true
+	})
+	t.insertAtom(atom, insertPos)
+	return insertPos
 }

@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.4
-	pgregory.net/rapid v0.4.8
+	pgregory.net/rapid v1.0.1-0.20230704221416-d59a3887beba
 )
 
 require (

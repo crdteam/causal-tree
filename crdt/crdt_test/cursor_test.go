@@ -85,7 +85,7 @@ func TestString(t *testing.T) {
 	})
 }
 
-func TestStringCursor(t *testing.T) {
+func TestStringCursorReadOnly(t *testing.T) {
 	tests := []struct {
 		desc   string
 		ops    []operation
@@ -149,7 +149,7 @@ func TestStringCursor(t *testing.T) {
 				// Delete string.
 				{op: deleteCharAt, pos: 0},
 			},
-			"",
+			"crdt",
 			atm.AtomID{Site: 0, Index: 0, Timestamp: 2},
 		},
 	}
@@ -213,6 +213,117 @@ func TestStringCursor(t *testing.T) {
 			}
 			if got, err := cur.Value(); err == nil {
 				t.Errorf("want err, got nil (char: %c)", got)
+			}
+		})
+	}
+}
+
+func TestStringCursorDelete(t *testing.T) {
+	tests := []struct {
+		desc   string
+		ops    []operation
+		value  string
+		atomID atm.AtomID
+	}{
+		{
+			"only inserts",
+			[]operation{
+				{op: insertStr},
+				{op: insertChar, char: 'c'},
+				{op: insertChar, char: 'r'},
+				{op: insertChar, char: 'd'},
+				{op: insertChar, char: 't'},
+			},
+			"crdt",
+			atm.AtomID{Site: 0, Index: 0, Timestamp: 2},
+		},
+		{
+			"delete str[1]",
+			[]operation{
+				{op: insertStr},
+				{op: insertChar, char: 'c'},
+				{op: insertChar, char: 'r'},
+				{op: insertChar, char: 'd'},
+				{op: insertChar, char: 't'},
+
+				// Delete char 'r'.
+				{op: deleteCharAt, pos: 2},
+			},
+			"cdt",
+			atm.AtomID{Site: 0, Index: 0, Timestamp: 2},
+		},
+		{
+			"delete str[1] twice",
+			[]operation{
+				{local: 0, op: insertStr},
+				{local: 0, op: insertChar, char: 'c'},
+				{local: 0, op: insertChar, char: 'r'},
+				{local: 0, op: insertChar, char: 'd'},
+				{local: 0, op: insertChar, char: 't'},
+
+				// Doubly delete char 'r' in position #2 via merge.
+				{local: 0, op: fork, remote: 1},
+				{local: 0, op: deleteCharAt, pos: 2},
+				{local: 1, op: deleteCharAt, pos: 2},
+				{local: 0, op: merge, remote: 1},
+			},
+			"cdt",
+			atm.AtomID{Site: 0, Index: 0, Timestamp: 2},
+		},
+		{
+			"delete string",
+			[]operation{
+				{op: insertStr},
+				{op: insertChar, char: 'c'},
+				{op: insertChar, char: 'r'},
+				{op: insertChar, char: 'd'},
+				{op: insertChar, char: 't'},
+
+				// Delete string.
+				{op: deleteCharAt, pos: 0},
+			},
+			"crdt",
+			atm.AtomID{Site: 0, Index: 0, Timestamp: 2},
+		},
+	}
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("desc=%s", test.desc), func(t *testing.T) {
+			trees := testOperations(t, test.ops)
+			str, err := trees[0].StringValue(test.atomID)
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			cur := str.Cursor()
+			// Delete first char.
+			cur.Index(0)
+			if err := cur.Delete(); err != nil {
+				t.Fatalf("delete first char: got err: %v", err)
+			}
+			// Delete last char.
+			cur.Index(str.Len() - 1)
+			if err := cur.Delete(); err != nil {
+				t.Fatalf("delete last char: got err: %v", err)
+			}
+			// Check value.
+			want := test.value[1 : len(test.value)-1]
+			got := str.Snapshot()
+			if got != want {
+				t.Fatalf("check value: want %q, got %q", want, got)
+			}
+			// Delete remaining characters, not moving cursor.
+			remainingChars := len(test.value) - 2
+			for i := 0; i < remainingChars; i++ {
+				if err := cur.Delete(); err != nil {
+					t.Fatalf("delete iteration #%d: got err: %v", i, err)
+				}
+			}
+			// Ensure string is empty
+			if got := str.Snapshot(); got != "" {
+				t.Fatalf("empty: want '', got %s", got)
+			}
+			// Check error when deleting str.
+			if err := cur.Delete(); err == nil {
+				t.Fatalf("delete str: want err, got nil")
 			}
 		})
 	}
