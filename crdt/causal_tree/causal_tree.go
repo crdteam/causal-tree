@@ -379,7 +379,7 @@ func (t *CausalTree) ViewAt(w weft.Weft) (*CausalTree, error) {
 	if !limits.isInView(cursor) {
 		cursor = atom.ID{}
 	}
-	//
+
 	i := siteIndex(t.Sitemap, t.SiteID)
 	tmax := w[i]
 	view := &CausalTree{

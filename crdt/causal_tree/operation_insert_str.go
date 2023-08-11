@@ -11,7 +11,7 @@ import (
 // | Operations - Insert str container |
 // +-----------------------------------+
 
-//Inserts a string container as a child of the root atom.
+// Inserts a string container as a child of the root atom.
 type InsertStr struct{}
 
 func (v InsertStr) AtomPriority() int { return insertStrPriority }
