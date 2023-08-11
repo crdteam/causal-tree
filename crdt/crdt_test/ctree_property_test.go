@@ -3,7 +3,7 @@ package crdt_test
 import (
 	"testing"
 
-	ctree "github.com/crdteam/causal-tree/crdt/causal_tree"
+	"github.com/crdteam/causal-tree/crdt/causal_tree"
 	"pgregory.net/rapid"
 )
 
@@ -17,13 +17,13 @@ import (
 //
 // TODO: perhaps this is a sign that the cursor should be more predictable...?
 type runesModel struct {
-	t     *ctree.CausalTree
+	t     *causal_tree.CausalTree
 	chars []rune
 }
 
 func newRunesModel() *runesModel {
 	m := new(runesModel)
-	m.t = ctree.NewCausalTree()
+	m.t = causal_tree.NewCausalTree()
 	return m
 }
 
@@ -75,19 +75,19 @@ func TestRunesProperty(t *testing.T) {
 // their chars inserted and deleted.
 
 type cursorModel struct {
-	cursor *ctree.StringCursor
+	cursor *causal_tree.StringCursor
 	chars  []rune
 	index  int
 }
 
 type multipleRunesModel struct {
-	t     *ctree.CausalTree
+	t     *causal_tree.CausalTree
 	model []*cursorModel
 }
 
 func newMultipleRunesModel() *multipleRunesModel {
 	m := new(multipleRunesModel)
-	m.t = ctree.NewCausalTree()
+	m.t = causal_tree.NewCausalTree()
 	return m
 }
 

@@ -3,7 +3,7 @@ package causal_tree
 import (
 	"fmt"
 
-	atm "github.com/crdteam/causal-tree/crdt/atom"
+	"github.com/crdteam/causal-tree/crdt/atom"
 )
 
 // +---------------------+
@@ -19,7 +19,7 @@ func (v Delete) MarshalJSON() ([]byte, error) {
 }
 func (v Delete) String() string { return "⌫ " }
 
-func (v Delete) ValidateChild(child atm.Value) error {
+func (v Delete) ValidateChild(child atom.Value) error {
 	return fmt.Errorf("invalid atom value after Delete: %T (%v)", child, child)
 }
 

@@ -3,14 +3,14 @@ package crdt_test
 import (
 	"fmt"
 
-	ctree "github.com/crdteam/causal-tree/crdt/causal_tree"
-	wft "github.com/crdteam/causal-tree/crdt/weft"
+	"github.com/crdteam/causal-tree/crdt/causal_tree"
+	"github.com/crdteam/causal-tree/crdt/weft"
 )
 
 // Showcasing the main operations in a replicated list (CausalTree) data type.
 func Example() {
 	// Create new CRDT in t1, insert 'crdt is nice', and copy it to t2.
-	t1 := ctree.NewCausalTree()
+	t1 := causal_tree.NewCausalTree()
 	for _, ch := range "crdt is nice" {
 		t1.InsertChar(ch)
 	}
@@ -47,7 +47,7 @@ func Example() {
 // Merging a set of overlapping changes may not produce intelligible results, but it's close
 // enough to the intention of each party, and does not interrupt either to solve a merge conflict.
 func ExampleCausalTree_overlap() {
-	t1 := ctree.NewCausalTree()
+	t1 := causal_tree.NewCausalTree()
 	for _, ch := range "desserts" {
 		t1.InsertChar(ch)
 	}
@@ -68,15 +68,15 @@ func ExampleCausalTree_overlap() {
 }
 
 func ExampleCausalTree_ViewAt() {
-	s0 := ctree.NewCausalTree() // S0 @ T1
-	s0.InsertChar('a')          // S0 @ T2
-	s1, _ := s0.Fork()          // S0 @ T3
-	s1.InsertChar('b')          // S1 @ T4
-	s1.InsertChar('c')          // S1 @ T5
-	s2, _ := s0.Fork()          // S0 @ T4
-	s2.InsertCharAt('x', -1)    // S2 @ T5
-	s2.InsertChar('y')          // S2 @ T6
-	s2.Merge(s1)                // S2 @ T7
+	s0 := causal_tree.NewCausalTree() // S0 @ T1
+	s0.InsertChar('a')                // S0 @ T2
+	s1, _ := s0.Fork()                // S0 @ T3
+	s1.InsertChar('b')                // S1 @ T4
+	s1.InsertChar('c')                // S1 @ T5
+	s2, _ := s0.Fork()                // S0 @ T4
+	s2.InsertCharAt('x', -1)          // S2 @ T5
+	s2.InsertChar('y')                // S2 @ T6
+	s2.Merge(s1)                      // S2 @ T7
 
 	// Now s2 reads as "xyabc", with each char having the following IDs and causes:
 	// x: s2 @ T5, caused by the zero atom
@@ -86,10 +86,10 @@ func ExampleCausalTree_ViewAt() {
 	// c: s1 @ T5, caused by s1 @ T4 (b)
 
 	// Timestamps for each site: s0=4, s1=5, s2=7
-	v1, _ := s2.ViewAt(wft.Weft{4, 5, 7})
-	v2, _ := s2.ViewAt(wft.Weft{4, 5, 0})
-	v3, _ := s2.ViewAt(wft.Weft{4, 0, 7})
-	v4, _ := s2.ViewAt(wft.Weft{0, 3, 7}) // With s0=0, we need to cut s1 down to T3, because it is ultimately caused by 'a' from s0.
+	v1, _ := s2.ViewAt(weft.Weft{4, 5, 7})
+	v2, _ := s2.ViewAt(weft.Weft{4, 5, 0})
+	v3, _ := s2.ViewAt(weft.Weft{4, 0, 7})
+	v4, _ := s2.ViewAt(weft.Weft{0, 3, 7}) // With s0=0, we need to cut s1 down to T3, because it is ultimately caused by 'a' from s0.
 
 	fmt.Println("Now: ", v1.ToString())
 	fmt.Println("s2=0:", v2.ToString())

@@ -3,7 +3,7 @@ package causal_tree
 import (
 	"testing"
 
-	atm "github.com/crdteam/causal-tree/crdt/atom"
+	"github.com/crdteam/causal-tree/crdt/atom"
 )
 
 func Test_AtomPriority(t *testing.T) {
@@ -63,7 +63,7 @@ func Test_String(t *testing.T) {
 func Test_ValidateChild(t *testing.T) {
 	testCases := []struct {
 		name   string
-		input  atm.Value
+		input  atom.Value
 		gotNil bool
 	}{
 		{

@@ -8,11 +8,11 @@ import (
 	"math"
 	"sort"
 
-	atm "github.com/crdteam/causal-tree/crdt/atom"
+	"github.com/crdteam/causal-tree/crdt/atom"
 	"github.com/crdteam/causal-tree/crdt/conversion"
 	"github.com/crdteam/causal-tree/crdt/generate_uuid_elements"
 	"github.com/crdteam/causal-tree/crdt/index"
-	wft "github.com/crdteam/causal-tree/crdt/weft"
+	"github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
 
@@ -29,11 +29,11 @@ var (
 // This data structure allows for 64K sites and 4G atoms in total.
 type CausalTree struct {
 	// Weave is the flat representation of a causal tree.
-	Weave []atm.Atom
+	Weave []atom.Atom
 	// Cursor is the ID of the causing atom for the next operation.
-	Cursor atm.ID
+	Cursor atom.ID
 	// Yarns is the list of atoms, grouped by the site that created them.
-	Yarns [][]atm.Atom
+	Yarns [][]atom.Atom
 	// Sitemap is the ordered list of site IDs. The index in this sitemap is used to represent a site in atoms
 	// and yarns.
 	Sitemap []uuid.UUID
@@ -55,12 +55,12 @@ func siteIndex(sitemap []uuid.UUID, siteID uuid.UUID) int {
 // Returns the index of an atom within the weave.
 //
 // Time complexity: O(atoms)
-func (t *CausalTree) atomIndex(atomID atm.ID) int {
+func (t *CausalTree) atomIndex(atomID atom.ID) int {
 	if atomID.Timestamp == 0 {
 		return -1
 	}
-	for i, atom := range t.Weave {
-		if atom.ID == atomID {
+	for i, a := range t.Weave {
+		if a.ID == atomID {
 			return i
 		}
 	}
@@ -70,17 +70,17 @@ func (t *CausalTree) atomIndex(atomID atm.ID) int {
 // Gets an atom from yarns.
 //
 // Time complexity: O(1)
-func (t *CausalTree) getAtom(atomID atm.ID) atm.Atom {
+func (t *CausalTree) getAtom(atomID atom.ID) atom.Atom {
 	return t.Yarns[atomID.Site][atomID.Index]
 }
 
 // Inserts an atom in the given weave index.
 //
 // Time complexity: O(atoms)
-func (t *CausalTree) insertAtom(atom atm.Atom, i int) {
-	t.Weave = append(t.Weave, atm.Atom{})
+func (t *CausalTree) insertAtom(a atom.Atom, i int) {
+	t.Weave = append(t.Weave, atom.Atom{})
 	copy(t.Weave[i+1:], t.Weave[i:])
-	t.Weave[i] = atom
+	t.Weave[i] = a
 }
 
 // +------+
@@ -106,12 +106,12 @@ func (t *CausalTree) Fork() (*CausalTree, error) {
 			localRemap.Set(j, j+1)
 		}
 		for i, yarn := range t.Yarns {
-			for j, atom := range yarn {
-				t.Yarns[i][j] = atom.RemapSite(localRemap)
+			for j, a := range yarn {
+				t.Yarns[i][j] = a.RemapSite(localRemap)
 			}
 		}
-		for i, atom := range t.Weave {
-			t.Weave[i] = atom.RemapSite(localRemap)
+		for i, a := range t.Weave {
+			t.Weave[i] = a.RemapSite(localRemap)
 		}
 		t.Cursor = t.Cursor.RemapSite(localRemap)
 		// Insert empty yarn in local position.
@@ -127,16 +127,16 @@ func (t *CausalTree) Fork() (*CausalTree, error) {
 	n := len(t.Sitemap)
 	t.Timestamp++
 	remote := &CausalTree{
-		Weave:     make([]atm.Atom, len(t.Weave)),
+		Weave:     make([]atom.Atom, len(t.Weave)),
 		Cursor:    t.Cursor,
-		Yarns:     make([][]atm.Atom, n),
+		Yarns:     make([][]atom.Atom, n),
 		Sitemap:   make([]uuid.UUID, n),
 		SiteID:    newSiteID,
 		Timestamp: t.Timestamp,
 	}
 	copy(remote.Weave, t.Weave)
 	for i, yarn := range t.Yarns {
-		remote.Yarns[i] = make([]atm.Atom, len(yarn))
+		remote.Yarns[i] = make([]atom.Atom, len(yarn))
 		copy(remote.Yarns[i], yarn)
 	}
 	copy(remote.Sitemap, t.Sitemap)
@@ -197,21 +197,21 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 
 	// 3. Remap atoms from local.
 	// Time complexity: O(atoms)
-	yarns := make([][]atm.Atom, len(sitemap))
+	yarns := make([][]atom.Atom, len(sitemap))
 	if len(localRemap) > 0 {
 		for i, yarn := range t.Yarns {
 			i := localRemap.Get(i)
-			yarns[i] = make([]atm.Atom, len(yarn))
-			for j, atom := range yarn {
-				yarns[i][j] = atom.RemapSite(localRemap)
+			yarns[i] = make([]atom.Atom, len(yarn))
+			for j, a := range yarn {
+				yarns[i][j] = a.RemapSite(localRemap)
 			}
 		}
-		for i, atom := range t.Weave {
-			t.Weave[i] = atom.RemapSite(localRemap)
+		for i, a := range t.Weave {
+			t.Weave[i] = a.RemapSite(localRemap)
 		}
 	} else {
 		for i, yarn := range t.Yarns {
-			yarns[i] = make([]atm.Atom, len(yarn))
+			yarns[i] = make([]atom.Atom, len(yarn))
 			copy(yarns[i], yarn)
 		}
 	}
@@ -224,21 +224,21 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 		end := len(yarn)
 		if end > start {
 			// Grow yarn to accomodate remote atoms.
-			yarns[i] = append(yarns[i], make([]atm.Atom, end-start)...)
+			yarns[i] = append(yarns[i], make([]atom.Atom, end-start)...)
 		}
 		for j := start; j < end; j++ {
-			atom := yarn[j].RemapSite(remoteRemap)
-			yarns[i][j] = atom
+			a := yarn[j].RemapSite(remoteRemap)
+			yarns[i][j] = a
 		}
 	}
 
 	// 5. Merge weaves.
 	// Time complexity: O(atoms)
-	remoteWeave := make([]atm.Atom, len(remote.Weave))
-	for i, atom := range remote.Weave {
-		remoteWeave[i] = atom.RemapSite(remoteRemap)
+	remoteWeave := make([]atom.Atom, len(remote.Weave))
+	for i, a := range remote.Weave {
+		remoteWeave[i] = a.RemapSite(remoteRemap)
 	}
-	t.Weave = atm.MergeWeaves(t.Weave, remoteWeave)
+	t.Weave = atom.MergeWeaves(t.Weave, remoteWeave)
 
 	// Move created stuff to this tree.
 	t.Yarns = yarns
@@ -257,13 +257,13 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 // Returns whether the atom is deleted.
 //
 // Time complexity: O(atoms), or, O(avg. block size)
-func (t *CausalTree) isDeleted(atomID atm.ID) bool {
+func (t *CausalTree) isDeleted(atomID atom.ID) bool {
 	i := t.atomIndex(atomID)
 	if i < 0 {
 		return false
 	}
 	var isDeleted bool
-	atm.WalkChildren(t.Weave[i:], func(child atm.Atom) bool {
+	atom.WalkChildren(t.Weave[i:], func(child atom.Atom) bool {
 		if _, ok := child.Value.(Delete); ok {
 			isDeleted = true
 			return false
@@ -300,7 +300,7 @@ type indexWeft []int
 
 // Returns whether the provided atom is present in the yarn's view.
 // The nil atom is always in view.
-func (ixs indexWeft) isInView(id atm.ID) bool {
+func (ixs indexWeft) isInView(id atom.ID) bool {
 	return int(id.Index) < ixs[id.Site] || id.Timestamp == 0
 }
 
@@ -308,20 +308,20 @@ func (ixs indexWeft) isInView(id atm.ID) bool {
 // in other sites.
 //
 // Time complexity: O(atoms)
-func (t *CausalTree) checkWeft(weft wft.Weft) (indexWeft, error) {
-	if len(t.Yarns) != len(weft) {
+func (t *CausalTree) checkWeft(w weft.Weft) (indexWeft, error) {
+	if len(t.Yarns) != len(w) {
 		return nil, ErrWeftInvalidLength
 	}
 	// Initialize limits at each yarn.
-	limits := make(indexWeft, len(weft))
+	limits := make(indexWeft, len(w))
 	for i, yarn := range t.Yarns {
 		limits[i] = len(yarn)
 	}
 	// Look for max timestamp at each yarn.
 	for i, yarn := range t.Yarns {
-		tmax := weft[i]
-		for j, atom := range yarn {
-			if atom.ID.Timestamp > tmax {
+		tmax := w[i]
+		for j, a := range yarn {
+			if a.ID.Timestamp > tmax {
 				limits[i] = j
 				break
 			}
@@ -330,8 +330,8 @@ func (t *CausalTree) checkWeft(weft wft.Weft) (indexWeft, error) {
 	// Verify that all causes are present at the weft cut.
 	for i, yarn := range t.Yarns {
 		limit := limits[i]
-		for _, atom := range yarn[:limit] {
-			if !limits.isInView(atom.Cause) {
+		for _, a := range yarn[:limit] {
+			if !limits.isInView(a.Cause) {
 				return nil, ErrWeftDisconnected
 			}
 		}
@@ -340,36 +340,36 @@ func (t *CausalTree) checkWeft(weft wft.Weft) (indexWeft, error) {
 }
 
 // Now returns the last known time at every site as a weft.
-func (t *CausalTree) Now() wft.Weft {
-	weft := make(wft.Weft, len(t.Yarns))
+func (t *CausalTree) Now() weft.Weft {
+	w := make(weft.Weft, len(t.Yarns))
 	for i, yarn := range t.Yarns {
 		n := len(yarn)
 		if n == 0 {
 			continue
 		}
-		weft[i] = yarn[n-1].ID.Timestamp
+		w[i] = yarn[n-1].ID.Timestamp
 	}
-	return weft
+	return w
 }
 
 // ViewAt returns a view of the tree in the provided time in the past, represented with a weft.
 //
 // Time complexity: O(atoms+sites)
-func (t *CausalTree) ViewAt(weft wft.Weft) (*CausalTree, error) {
-	limits, err := t.checkWeft(weft)
+func (t *CausalTree) ViewAt(w weft.Weft) (*CausalTree, error) {
+	limits, err := t.checkWeft(w)
 	if err != nil {
 		return nil, err
 	}
 	n := len(limits)
-	yarns := make([][]atm.Atom, n)
+	yarns := make([][]atom.Atom, n)
 	for i, yarn := range t.Yarns {
-		yarns[i] = make([]atm.Atom, limits[i])
+		yarns[i] = make([]atom.Atom, limits[i])
 		copy(yarns[i], yarn)
 	}
-	weave := make([]atm.Atom, 0, len(t.Weave))
-	for _, atom := range t.Weave {
-		if limits.isInView(atom.ID) {
-			weave = append(weave, atom)
+	weave := make([]atom.Atom, 0, len(t.Weave))
+	for _, a := range t.Weave {
+		if limits.isInView(a.ID) {
+			weave = append(weave, a)
 		}
 	}
 	sitemap := make([]uuid.UUID, n)
@@ -377,11 +377,11 @@ func (t *CausalTree) ViewAt(weft wft.Weft) (*CausalTree, error) {
 	// Set cursor, if it still exists in this view.
 	cursor := t.Cursor
 	if !limits.isInView(cursor) {
-		cursor = atm.ID{}
+		cursor = atom.ID{}
 	}
 	//
 	i := siteIndex(t.Sitemap, t.SiteID)
-	tmax := weft[i]
+	tmax := w[i]
 	view := &CausalTree{
 		Weave:     weave,
 		Cursor:    cursor,
@@ -412,10 +412,10 @@ var (
 // +------------+
 
 // Time complexity: O(atoms), or, O(atoms + (avg. block size))
-func (t *CausalTree) insertAtomAtCursor(atom atm.Atom) {
+func (t *CausalTree) insertAtomAtCursor(a atom.Atom) {
 	if t.Cursor.Timestamp == 0 {
 		// Cursor is at initial position.
-		t.insertAtom(atom, 0)
+		t.insertAtom(a, 0)
 		return
 	}
 	// Search for position in weave that atom should be inserted, in a way that it's sorted relative to
@@ -428,9 +428,9 @@ func (t *CausalTree) insertAtomAtCursor(atom atm.Atom) {
 	// Weave indices:          c0        c1          c2           c3            end
 	c0 := t.atomIndex(t.Cursor)
 	var pos, i int
-	atm.WalkCausalBlock(t.Weave[c0:], func(a atm.Atom) bool {
+	atom.WalkCausalBlock(t.Weave[c0:], func(a0 atom.Atom) bool {
 		i++
-		if a.Cause == t.Cursor && a.Compare(atom) < 0 && pos == 0 {
+		if a0.Cause == t.Cursor && a0.Compare(a) < 0 && pos == 0 {
 			// a is the first child smaller than atom.
 			pos = i
 		}
@@ -440,37 +440,37 @@ func (t *CausalTree) insertAtomAtCursor(atom atm.Atom) {
 	if pos > 0 {
 		index = c0 + pos
 	}
-	t.insertAtom(atom, index)
+	t.insertAtom(a, index)
 }
 
 // Inserts the atom as a child of the cursor, and returns its ID.
 //
 // Time complexity: O(atoms + log(sites))
-func (t *CausalTree) addAtom(value atm.Value) (atm.ID, error) {
+func (t *CausalTree) addAtom(value atom.Value) (atom.ID, error) {
 	t.Timestamp++
 	if t.Timestamp == 0 {
 		// Overflow
-		return atm.ID{}, ErrStateLimitExceeded
+		return atom.ID{}, ErrStateLimitExceeded
 	}
 	if t.Cursor.Timestamp > 0 {
 		cursorAtom := t.getAtom(t.Cursor)
 		if err := cursorAtom.Value.ValidateChild(value); err != nil {
-			return atm.ID{}, err
+			return atom.ID{}, err
 		}
 	}
 	i := siteIndex(t.Sitemap, t.SiteID)
-	atomID := atm.ID{
+	atomID := atom.ID{
 		Site:      uint16(i),
 		Index:     uint32(len(t.Yarns[i])),
 		Timestamp: t.Timestamp,
 	}
-	atom := atm.Atom{
+	a := atom.Atom{
 		ID:    atomID,
 		Cause: t.Cursor,
 		Value: value,
 	}
-	t.insertAtomAtCursor(atom)
-	t.Yarns[i] = append(t.Yarns[i], atom)
+	t.insertAtomAtCursor(a)
+	t.Yarns[i] = append(t.Yarns[i], a)
 	return atomID, nil
 }
 
@@ -479,8 +479,8 @@ func (t *CausalTree) addAtom(value atm.Value) (atm.ID, error) {
 // +-------------------------+
 
 // Auxiliary function that checks if 'atom' is a container.
-func isContainer(atom atm.Atom) bool {
-	switch atom.Value.(type) {
+func isContainer(a atom.Atom) bool {
+	switch a.Value.(type) {
 	case InsertStr, InsertCounter:
 		return true
 	default:
@@ -490,25 +490,25 @@ func isContainer(atom atm.Atom) bool {
 }
 
 // Time complexity: O(atoms)
-func (t *CausalTree) filterDeleted() []atm.Atom {
-	atoms := make([]atm.Atom, len(t.Weave))
+func (t *CausalTree) filterDeleted() []atom.Atom {
+	atoms := make([]atom.Atom, len(t.Weave))
 	copy(atoms, t.Weave)
-	indices := make(map[atm.ID]int)
+	indices := make(map[atom.ID]int)
 	var hasDelete bool
-	for i, atom := range t.Weave {
-		indices[atom.ID] = i
+	for i, a := range t.Weave {
+		indices[a.ID] = i
 	}
-	for i, atom := range t.Weave {
-		if _, ok := atom.Value.(Delete); ok {
+	for i, a := range t.Weave {
+		if _, ok := a.Value.(Delete); ok {
 			hasDelete = true
 			// Deletion must always come after deleted atom, so
 			// indices map must have the cause location.
-			deletedAtomIdx := indices[atom.Cause]
+			deletedAtomIdx := indices[a.Cause]
 			if isContainer(atoms[deletedAtomIdx]) {
-				atm.DeleteDescendants(atoms, deletedAtomIdx)
+				atom.DeleteDescendants(atoms, deletedAtomIdx)
 			} else {
-				atoms[i] = atm.Atom{}              //Delete the "Delete" atom
-				atoms[deletedAtomIdx] = atm.Atom{} //Delete the target atom
+				atoms[i] = atom.Atom{}              //Delete the "Delete" atom
+				atoms[deletedAtomIdx] = atom.Atom{} //Delete the target atom
 			}
 		}
 	}
@@ -518,8 +518,8 @@ func (t *CausalTree) filterDeleted() []atm.Atom {
 	}
 	// Move chars to fill in holes of empty atoms.
 	deleted := 0
-	for i, atom := range atoms {
-		if atom.ID.Timestamp == 0 {
+	for i, a := range atoms {
+		if a.ID.Timestamp == 0 {
 			deleted++
 		} else {
 			atoms[i-deleted] = atoms[i]
@@ -535,7 +535,7 @@ func (t *CausalTree) filterDeleted() []atm.Atom {
 func (t *CausalTree) SetCursor(i int) error {
 	if i < 0 {
 		if i == -1 {
-			t.Cursor = atm.ID{}
+			t.Cursor = atom.ID{}
 			return nil
 		}
 		return ErrCursorOutOfRange
@@ -583,20 +583,20 @@ func (t *CausalTree) ToJSON() ([]byte, error) {
 			elements = append(elements, string(value.Char))
 			i++
 		case InsertStr:
-			strSize := atm.CausalBlockSize(atoms[i:]) - 1
+			strSize := atom.CausalBlockSize(atoms[i:]) - 1
 			strChars := make([]rune, strSize)
 
-			for j, atom := range atoms[i+1 : i+strSize+1] {
-				strChars[j] = atom.Value.(InsertChar).Char
+			for j, a := range atoms[i+1 : i+strSize+1] {
+				strChars[j] = a.Value.(InsertChar).Char
 			}
 			elements = append(elements, string(strChars))
 			i = i + strSize + 1
 		case InsertCounter:
-			counterSize := atm.CausalBlockSize(atoms[i:]) - 1
+			counterSize := atom.CausalBlockSize(atoms[i:]) - 1
 			var counterValue int32 = 0
 
-			for _, atom := range atoms[i+1 : i+counterSize+1] {
-				counterValue += atom.Value.(InsertAdd).Value
+			for _, a := range atoms[i+1 : i+counterSize+1] {
+				counterValue += a.Value.(InsertAdd).Value
 			}
 			elements = append(elements, counterValue)
 			i = i + counterSize + 1
