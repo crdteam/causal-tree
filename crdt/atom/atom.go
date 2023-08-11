@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
+	"github.com/crdteam/causal-tree/crdt/indexmap"
 )
 
 // AtomValue is a tree operation.

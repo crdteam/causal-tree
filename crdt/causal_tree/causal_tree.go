@@ -9,9 +9,9 @@ import (
 	"sort"
 
 	atm "github.com/crdteam/causal-tree/crdt/atom"
-	"github.com/crdteam/causal-tree/crdt/utils/conversion"
-	"github.com/crdteam/causal-tree/crdt/utils/generate_uuid_elements"
-	"github.com/crdteam/causal-tree/crdt/utils/indexmap"
+	"github.com/crdteam/causal-tree/crdt/conversion"
+	"github.com/crdteam/causal-tree/crdt/generate_uuid_elements"
+	"github.com/crdteam/causal-tree/crdt/indexmap"
 	wft "github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
