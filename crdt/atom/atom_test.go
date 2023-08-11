@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/crdteam/causal-tree/crdt/indexmap"
+	"github.com/crdteam/causal-tree/crdt/index"
 )
 
 /*--------------------------------Aux Functions-------------------------------*/
@@ -150,49 +150,49 @@ func TestAtomID_RemapSite(t *testing.T) {
 	testCases := []struct {
 		name       string
 		id         AtomID
-		indexMap   indexmap.IndexMap
+		indexMap   index.Map
 		expectSite uint16
 	}{
 		{
 			name:       "no remap",
 			id:         AtomID{Site: 1, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{},
+			indexMap:   index.Map{},
 			expectSite: 1,
 		},
 		{
 			name:       "remap site 1 to 2",
 			id:         AtomID{Site: 1, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{1: 2},
+			indexMap:   index.Map{1: 2},
 			expectSite: 2,
 		},
 		{
 			name:       "remap site 2 to 1, original site is 1",
 			id:         AtomID{Site: 1, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{2: 1},
+			indexMap:   index.Map{2: 1},
 			expectSite: 1,
 		},
 		{
 			name:       "remap site 2 to 1, original site is 2",
 			id:         AtomID{Site: 2, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{2: 1},
+			indexMap:   index.Map{2: 1},
 			expectSite: 1,
 		},
 		{
 			name:       "remap site 0 to 65535",
 			id:         AtomID{Site: 0, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{0: 65535},
+			indexMap:   index.Map{0: 65535},
 			expectSite: 65535,
 		},
 		{
 			name:       "remap site 65535 to 0",
 			id:         AtomID{Site: math.MaxUint16, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{int(math.MaxUint16): 0},
+			indexMap:   index.Map{int(math.MaxUint16): 0},
 			expectSite: 0,
 		},
 		{
 			name:       "remap site 32768 to 32767",
 			id:         AtomID{Site: 32768, Index: 1, Timestamp: 1},
-			indexMap:   indexmap.IndexMap{32768: 32767},
+			indexMap:   index.Map{32768: 32767},
 			expectSite: 32767,
 		},
 	}
@@ -398,7 +398,7 @@ func TestAtom_RemapSite(t *testing.T) {
 	testCases := []struct {
 		name     string
 		atom     Atom
-		indexMap indexmap.IndexMap
+		indexMap index.Map
 		want     Atom
 	}{
 		{
@@ -408,7 +408,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 1, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{
+			indexMap: index.Map{
 				1: 2,
 			},
 			want: Atom{
@@ -424,7 +424,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 1, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{},
+			indexMap: index.Map{},
 			want: Atom{
 				ID:    AtomID{Site: 1, Index: 2, Timestamp: 1},
 				Cause: AtomID{Site: 1, Index: 1, Timestamp: 1},
@@ -438,7 +438,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{1: 3, 2: 4},
+			indexMap: index.Map{1: 3, 2: 4},
 			want: Atom{
 				ID:    AtomID{Site: 3, Index: 2, Timestamp: 1},
 				Cause: AtomID{Site: 4, Index: 1, Timestamp: 1},
@@ -452,7 +452,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{1: 3},
+			indexMap: index.Map{1: 3},
 			want: Atom{
 				ID:    AtomID{Site: 3, Index: 2, Timestamp: 1},
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},
@@ -466,7 +466,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{2: 3},
+			indexMap: index.Map{2: 3},
 			want: Atom{
 				ID:    AtomID{Site: 1, Index: 2, Timestamp: 1},
 				Cause: AtomID{Site: 3, Index: 1, Timestamp: 1},
@@ -480,7 +480,7 @@ func TestAtom_RemapSite(t *testing.T) {
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},
 				Value: DummyAtomValue{Priority: 1},
 			},
-			indexMap: indexmap.IndexMap{3: 4},
+			indexMap: index.Map{3: 4},
 			want: Atom{
 				ID:    AtomID{Site: 1, Index: 2, Timestamp: 1},
 				Cause: AtomID{Site: 2, Index: 1, Timestamp: 1},

@@ -1,4 +1,4 @@
-package indexmap
+package index
 
 import (
 	"reflect"
@@ -11,55 +11,55 @@ func mapsEqual(x, y map[int]int) bool {
 func TestIndexMap_Set(t *testing.T) {
 	testCases := []struct {
 		name                string
-		indexTransformation func(IndexMap) IndexMap
-		input               IndexMap
-		expected            IndexMap
+		indexTransformation func(Map) Map
+		input               Map
+		expected            Map
 	}{
 		{
 			name: "empty indexmap as input and output",
-			indexTransformation: func(input IndexMap) IndexMap {
+			indexTransformation: func(input Map) Map {
 				input.Set(0, 0)
 				return input
 			},
-			input:    IndexMap{},
-			expected: IndexMap{},
+			input:    Map{},
+			expected: Map{},
 		},
 		{
 			name: "map single index to a different index",
-			indexTransformation: func(input IndexMap) IndexMap {
+			indexTransformation: func(input Map) Map {
 				input.Set(1, 2)
 				return input
 			},
-			input:    IndexMap{},
-			expected: IndexMap{1: 2},
+			input:    Map{},
+			expected: Map{1: 2},
 		},
 		{
 			name: "map multiple indices to different indices",
-			indexTransformation: func(input IndexMap) IndexMap {
+			indexTransformation: func(input Map) Map {
 				input.Set(1, 2)
 				input.Set(3, 4)
 				return input
 			},
-			input:    IndexMap{},
-			expected: IndexMap{1: 2, 3: 4},
+			input:    Map{},
+			expected: Map{1: 2, 3: 4},
 		},
 		{
 			name: "map some indices and leave others",
-			indexTransformation: func(input IndexMap) IndexMap {
+			indexTransformation: func(input Map) Map {
 				input.Set(1, 2)
 				return input
 			},
-			input:    IndexMap{3: 3},
-			expected: IndexMap{1: 2, 3: 3},
+			input:    Map{3: 3},
+			expected: Map{1: 2, 3: 3},
 		},
 		{
 			name: "map an index to itself",
-			indexTransformation: func(input IndexMap) IndexMap {
+			indexTransformation: func(input Map) Map {
 				input.Set(1, 1)
 				return input
 			},
-			input:    IndexMap{},
-			expected: IndexMap{},
+			input:    Map{},
+			expected: Map{},
 		},
 	}
 	for _, tc := range testCases {
@@ -75,31 +75,31 @@ func TestIndexMap_Set(t *testing.T) {
 func TestIndexMap_Get(t *testing.T) {
 	testCases := []struct {
 		name         string
-		baseIndexMap IndexMap
+		baseIndexMap Map
 		input        int
 		expected     int
 	}{
 		{
 			name:         "empty indexmap",
-			baseIndexMap: IndexMap{},
+			baseIndexMap: Map{},
 			input:        1,
 			expected:     1,
 		},
 		{
 			name:         "indexmap with mapped indices, querying mapped index",
-			baseIndexMap: IndexMap{1: 2, 3: 4},
+			baseIndexMap: Map{1: 2, 3: 4},
 			input:        1,
 			expected:     2,
 		},
 		{
 			name:         "indexmap with mapped indices, querying non-mapped index",
-			baseIndexMap: IndexMap{1: 2, 3: 4},
+			baseIndexMap: Map{1: 2, 3: 4},
 			input:        5,
 			expected:     5,
 		},
 		{
 			name:         "non-empty indexmap without queried index",
-			baseIndexMap: IndexMap{3: 3},
+			baseIndexMap: Map{3: 3},
 			input:        1,
 			expected:     1,
 		},

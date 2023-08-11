@@ -3,7 +3,7 @@ package atom
 import (
 	"fmt"
 
-	"github.com/crdteam/causal-tree/crdt/indexmap"
+	"github.com/crdteam/causal-tree/crdt/index"
 )
 
 // AtomID is the unique identifier of an atom.
@@ -81,7 +81,7 @@ func (id AtomID) Compare(other AtomID) int {
 	RemapSite remaps the site index of an AtomID using the given index map.
 	It returns a new AtomID with the remapped site index.
 */
-func (id AtomID) RemapSite(m indexmap.IndexMap) AtomID {
+func (id AtomID) RemapSite(m index.Map) AtomID {
 	return AtomID{
 		Site:      uint16(m.Get(int(id.Site))),
 		Index:     id.Index,

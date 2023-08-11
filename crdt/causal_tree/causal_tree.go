@@ -11,7 +11,7 @@ import (
 	atm "github.com/crdteam/causal-tree/crdt/atom"
 	"github.com/crdteam/causal-tree/crdt/conversion"
 	"github.com/crdteam/causal-tree/crdt/generate_uuid_elements"
-	"github.com/crdteam/causal-tree/crdt/indexmap"
+	"github.com/crdteam/causal-tree/crdt/index"
 	wft "github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
@@ -101,7 +101,7 @@ func (t *CausalTree) Fork() (*CausalTree, error) {
 		t.Sitemap = append(t.Sitemap, newSiteID)
 	} else {
 		// Remap atoms in yarns and weave.
-		localRemap := make(indexmap.IndexMap)
+		localRemap := make(index.Map)
 		for j := i; j < len(t.Sitemap); j++ {
 			localRemap.Set(j, j+1)
 		}
@@ -186,8 +186,8 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 
 	// 2. Compute site index remapping.
 	// Time complexity: O(sites*log(sites))
-	localRemap := make(indexmap.IndexMap)
-	remoteRemap := make(indexmap.IndexMap)
+	localRemap := make(index.Map)
+	remoteRemap := make(index.Map)
 	for i, site := range t.Sitemap {
 		localRemap.Set(i, siteIndex(sitemap, site))
 	}

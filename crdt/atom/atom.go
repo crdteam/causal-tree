@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/crdteam/causal-tree/crdt/indexmap"
+	"github.com/crdteam/causal-tree/crdt/index"
 )
 
 // AtomValue is a tree operation.
@@ -99,7 +99,7 @@ func (a Atom) Compare(other Atom) int {
 
 		Atom(ID=AtomID(Site=2,Index=1),Cause=AtomID(Site=2,Index=2),Value=...)
 */
-func (a Atom) RemapSite(m indexmap.IndexMap) Atom {
+func (a Atom) RemapSite(m index.Map) Atom {
 	return Atom{
 		ID:    a.ID.RemapSite(m),
 		Cause: a.Cause.RemapSite(m),
