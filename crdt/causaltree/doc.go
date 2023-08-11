@@ -56,4 +56,4 @@
 				spell "NICE". The cause of ID 09 is also the atom 08.
 				The first atom has no cause, and all others have as cause the atom to its left.
 */
-package causal_tree
+package causaltree

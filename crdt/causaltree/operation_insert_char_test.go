@@ -1,4 +1,4 @@
-package causal_tree
+package causaltree
 
 import (
 	"testing"

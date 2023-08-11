@@ -3,14 +3,14 @@ package crdt_test
 import (
 	"fmt"
 
-	"github.com/crdteam/causal-tree/crdt/causal_tree"
+	"github.com/crdteam/causal-tree/crdt/causaltree"
 	"github.com/crdteam/causal-tree/crdt/weft"
 )
 
 // Showcasing the main operations in a replicated list (CausalTree) data type.
 func Example() {
 	// Create new CRDT in t1, insert 'crdt is nice', and copy it to t2.
-	t1 := causal_tree.New()
+	t1 := causaltree.New()
 	for _, ch := range "crdt is nice" {
 		t1.InsertChar(ch)
 	}
@@ -47,7 +47,7 @@ func Example() {
 // Merging a set of overlapping changes may not produce intelligible results, but it's close
 // enough to the intention of each party, and does not interrupt either to solve a merge conflict.
 func ExampleCausalTree_overlap() {
-	t1 := causal_tree.New()
+	t1 := causaltree.New()
 	for _, ch := range "desserts" {
 		t1.InsertChar(ch)
 	}
@@ -68,7 +68,7 @@ func ExampleCausalTree_overlap() {
 }
 
 func ExampleCausalTree_ViewAt() {
-	s0 := causal_tree.New()  // S0 @ T1
+	s0 := causaltree.New()   // S0 @ T1
 	s0.InsertChar('a')       // S0 @ T2
 	s1, _ := s0.Fork()       // S0 @ T3
 	s1.InsertChar('b')       // S1 @ T4
