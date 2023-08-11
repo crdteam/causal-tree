@@ -10,7 +10,7 @@ import (
 // Showcasing the main operations in a replicated list (CausalTree) data type.
 func Example() {
 	// Create new CRDT in t1, insert 'crdt is nice', and copy it to t2.
-	t1 := causal_tree.NewCausalTree()
+	t1 := causal_tree.New()
 	for _, ch := range "crdt is nice" {
 		t1.InsertChar(ch)
 	}
@@ -47,7 +47,7 @@ func Example() {
 // Merging a set of overlapping changes may not produce intelligible results, but it's close
 // enough to the intention of each party, and does not interrupt either to solve a merge conflict.
 func ExampleCausalTree_overlap() {
-	t1 := causal_tree.NewCausalTree()
+	t1 := causal_tree.New()
 	for _, ch := range "desserts" {
 		t1.InsertChar(ch)
 	}
@@ -68,15 +68,15 @@ func ExampleCausalTree_overlap() {
 }
 
 func ExampleCausalTree_ViewAt() {
-	s0 := causal_tree.NewCausalTree() // S0 @ T1
-	s0.InsertChar('a')                // S0 @ T2
-	s1, _ := s0.Fork()                // S0 @ T3
-	s1.InsertChar('b')                // S1 @ T4
-	s1.InsertChar('c')                // S1 @ T5
-	s2, _ := s0.Fork()                // S0 @ T4
-	s2.InsertCharAt('x', -1)          // S2 @ T5
-	s2.InsertChar('y')                // S2 @ T6
-	s2.Merge(s1)                      // S2 @ T7
+	s0 := causal_tree.New()  // S0 @ T1
+	s0.InsertChar('a')       // S0 @ T2
+	s1, _ := s0.Fork()       // S0 @ T3
+	s1.InsertChar('b')       // S1 @ T4
+	s1.InsertChar('c')       // S1 @ T5
+	s2, _ := s0.Fork()       // S0 @ T4
+	s2.InsertCharAt('x', -1) // S2 @ T5
+	s2.InsertChar('y')       // S2 @ T6
+	s2.Merge(s1)             // S2 @ T7
 
 	// Now s2 reads as "xyabc", with each char having the following IDs and causes:
 	// x: s2 @ T5, caused by the zero atom

@@ -89,7 +89,7 @@ type state struct {
 }
 
 func newState(debugMsgs chan<- debugMessage) *state {
-	site := ctree.NewCausalTree()
+	site := ctree.New()
 	siteID := site.SiteID.String()
 	tree := treeinfo{
 		id:    siteID,

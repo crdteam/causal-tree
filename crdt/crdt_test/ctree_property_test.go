@@ -23,7 +23,7 @@ type runesModel struct {
 
 func newRunesModel() *runesModel {
 	m := new(runesModel)
-	m.t = causal_tree.NewCausalTree()
+	m.t = causal_tree.New()
 	return m
 }
 
@@ -87,7 +87,7 @@ type multipleRunesModel struct {
 
 func newMultipleRunesModel() *multipleRunesModel {
 	m := new(multipleRunesModel)
-	m.t = causal_tree.NewCausalTree()
+	m.t = causal_tree.New()
 	return m
 }
 

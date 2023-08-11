@@ -168,7 +168,7 @@ func testOperations(t *testing.T, ops []operation) []*causal_tree.CausalTree {
 			t.Fatalf("err: %v", err)
 		}
 	}
-	trees := []*causal_tree.CausalTree{causal_tree.NewCausalTree()}
+	trees := []*causal_tree.CausalTree{causal_tree.New()}
 	f, err := setupTestFile(t.Name())
 	if err != nil {
 		t.Log(err)
@@ -234,7 +234,7 @@ func testOperations(t *testing.T, ops []operation) []*causal_tree.CausalTree {
 
 // Execute list of operations, checking if they are well-formed.
 func validateOperations(ops []operation) error {
-	trees := []*causal_tree.CausalTree{causal_tree.NewCausalTree()}
+	trees := []*causal_tree.CausalTree{causal_tree.New()}
 	for _, op := range ops {
 		if op.local >= len(trees) {
 			return fmt.Errorf("invalid local index %d (len: %d), op: %v", op.local, len(trees), op)
@@ -316,7 +316,7 @@ func makeRandomTree(size int, r *rand.Rand) (*causal_tree.CausalTree, error) {
 	const numLists = 10
 	// Create trees forking from trees[0]
 	trees := make([]*causal_tree.CausalTree, numLists)
-	trees[0] = causal_tree.NewCausalTree()
+	trees[0] = causal_tree.New()
 	for i := 1; i < numLists; i++ {
 		t, err := trees[0].Fork()
 		if err != nil {

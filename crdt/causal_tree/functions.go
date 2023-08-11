@@ -5,8 +5,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// NewCausalTree creates an initialized empty replicated tree.
-func NewCausalTree() *CausalTree {
+// New creates an initialized empty replicated tree.
+func New() *CausalTree {
 	siteID := uuidv1()
 	return &CausalTree{
 		Weave:     nil,

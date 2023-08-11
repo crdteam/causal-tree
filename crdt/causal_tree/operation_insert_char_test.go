@@ -102,7 +102,7 @@ func Test_ValidateChild(t *testing.T) {
 func Test_InsertChar(t *testing.T) {
 	t.Run("Insert a char", func(t *testing.T) {
 		// Create a causal tree
-		tree := NewCausalTree()
+		tree := New()
 
 		// Insert a char
 		err := tree.InsertChar('a')
