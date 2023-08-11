@@ -10,7 +10,7 @@ func NewCausalTree() *CausalTree {
 	siteID := uuidv1()
 	return &CausalTree{
 		Weave:     nil,
-		Cursor:    atm.AtomID{},
+		Cursor:    atm.ID{},
 		Yarns:     [][]atm.Atom{nil},
 		Sitemap:   []uuid.UUID{siteID},
 		SiteID:    siteID,

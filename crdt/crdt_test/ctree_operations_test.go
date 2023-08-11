@@ -353,7 +353,7 @@ func makeRandomTree(size int, r *rand.Rand) (*ctree.CausalTree, error) {
 				pos := r.Intn(n)
 				err = t.DeleteAt(pos)
 				n--
-			} else if t.Cursor != (atm.AtomID{}) {
+			} else if t.Cursor != (atm.ID{}) {
 				err = t.Delete()
 				n--
 			}

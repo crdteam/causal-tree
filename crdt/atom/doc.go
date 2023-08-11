@@ -3,16 +3,16 @@
 
 	Description
 
-	This package defines three types: AtomID, AtomValue and Atom.
+	This package defines three types: ID, Value and Atom.
 	And its methods. The atom type is the basic unit of the causal tree.
 
-	AtomID
+	ID
 
-	AtomID is the unique identifier of an atom.
+	ID is the unique identifier of an atom.
 
-	AtomValue
+	Value
 
-	AtomValue is a tree operation.
+	Value is a tree operation.
 
 	Atom
 

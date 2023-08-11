@@ -26,7 +26,7 @@ func (v InsertAdd) MarshalJSON() ([]byte, error) {
 func (v InsertAdd) String() string { return strconv.FormatInt(int64(v.Value), 10) }
 
 //InsertAdd atoms only accept child of type InsertAdd.
-func (v InsertAdd) ValidateChild(child atm.AtomValue) error {
+func (v InsertAdd) ValidateChild(child atm.Value) error {
 	switch child.(type) {
 	case InsertAdd:
 		return nil
@@ -67,7 +67,7 @@ func (v InsertCounter) MarshalJSON() ([]byte, error) {
 
 func (v InsertCounter) String() string { return "Counter: " }
 
-func (v InsertCounter) ValidateChild(child atm.AtomValue) error {
+func (v InsertCounter) ValidateChild(child atm.Value) error {
 	switch child.(type) {
 	case InsertAdd, Delete:
 		return nil
@@ -78,7 +78,7 @@ func (v InsertCounter) ValidateChild(child atm.AtomValue) error {
 
 // InsertCounter inserts a Counter container after the root and advances the cursor.
 func (t *CausalTree) InsertCounter() error {
-	t.Cursor = atm.AtomID{}
+	t.Cursor = atm.ID{}
 	atomID, err := t.addAtom(InsertCounter{})
 	t.Cursor = atomID
 	return err

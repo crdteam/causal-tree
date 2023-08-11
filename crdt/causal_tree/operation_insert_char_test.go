@@ -63,7 +63,7 @@ func Test_String(t *testing.T) {
 func Test_ValidateChild(t *testing.T) {
 	testCases := []struct {
 		name   string
-		input  atm.AtomValue
+		input  atm.Value
 		gotNil bool
 	}{
 		{

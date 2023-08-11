@@ -26,7 +26,7 @@ func (v InsertChar) String() string { return string([]rune{v.Char}) }
 // This function checks if the given atom value (child) is a possible child of
 // the current type (v). InsertChar can only have InsertChar or Delete as a
 // child.
-func (v InsertChar) ValidateChild(child atm.AtomValue) error {
+func (v InsertChar) ValidateChild(child atm.Value) error {
 	switch child.(type) {
 	case InsertChar, Delete:
 		return nil

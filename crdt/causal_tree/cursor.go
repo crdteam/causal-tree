@@ -64,7 +64,7 @@ type Value interface {
 // position or to its right.
 type treePosition struct {
 	// ID is the underlying atom ID for this struct.
-	ID atm.AtomID
+	ID atm.ID
 
 	t            *CausalTree
 	lastKnownPos int
@@ -319,7 +319,7 @@ func (ch *Char) Snapshot() rune {
 // ---- CausalTree methods
 
 // StringValue returns a wrapper over InsertStr.
-func (t *CausalTree) StringValue(atomID atm.AtomID) (*String, error) {
+func (t *CausalTree) StringValue(atomID atm.ID) (*String, error) {
 	i := t.atomIndex(atomID)
 	atom := t.Weave[i]
 	if _, ok := atom.Value.(InsertStr); !ok {
@@ -342,7 +342,7 @@ func (t *CausalTree) SetString() (*String, error) {
 }
 
 // DeleteAtom deletes the given atom from the tree.
-func (t *CausalTree) DeleteAtom(atomID atm.AtomID) error {
+func (t *CausalTree) DeleteAtom(atomID atm.ID) error {
 	// TODO: change implementation to remove internal cursor from CausalTree.
 	t.Cursor = atomID
 	return t.Delete()
@@ -351,13 +351,13 @@ func (t *CausalTree) DeleteAtom(atomID atm.AtomID) error {
 // TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.
 //
 // This is a copy of addAtom, but using the known position of the cause.
-func (t *CausalTree) addAtom2(causePos int, value atm.AtomValue) (int, error) {
+func (t *CausalTree) addAtom2(causePos int, value atm.Value) (int, error) {
 	t.Timestamp++
 	if t.Timestamp == 0 {
 		// Overflow
 		return -1, ErrStateLimitExceeded
 	}
-	var causeID atm.AtomID
+	var causeID atm.ID
 	if causePos >= 0 {
 		cause := t.Weave[causePos]
 		causeID = cause.ID
@@ -366,7 +366,7 @@ func (t *CausalTree) addAtom2(causePos int, value atm.AtomValue) (int, error) {
 		}
 	}
 	i := siteIndex(t.Sitemap, t.SiteID)
-	atomID := atm.AtomID{
+	atomID := atm.ID{
 		Site:      uint16(i),
 		Index:     uint32(len(t.Yarns[i])),
 		Timestamp: t.Timestamp,

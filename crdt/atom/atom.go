@@ -7,23 +7,23 @@ import (
 	"github.com/crdteam/causal-tree/crdt/index"
 )
 
-// AtomValue is a tree operation.
-type AtomValue interface {
+// Value is a tree operation.
+type Value interface {
 	json.Marshaler
 	// AtomPriority returns where this atom should be placed compared with its siblings.
 	AtomPriority() int
 	// ValidateChild checks whether the given value can be appended as a child.
-	ValidateChild(child AtomValue) error
+	ValidateChild(child Value) error
 }
 
 // Atom represents an atomic operation within a replicated tree.
 type Atom struct {
 	// ID is the identifier of this atom.
-	ID AtomID
+	ID ID
 	// Cause is the identifier of the preceding atom.
-	Cause AtomID
+	Cause ID
 	// Value is the data operation represented by this atom.
-	Value AtomValue
+	Value Value
 }
 
 // Atom's methods:
@@ -89,7 +89,7 @@ func (a Atom) Compare(other Atom) int {
 
 	Consider the following atom:
 
-		Atom(ID=AtomID(Site=1,Index=2),Cause=AtomID(Site=1,Index=1),Value=...)
+		Atom(ID=ID(Site=1,Index=2),Cause=ID(Site=1,Index=1),Value=...)
 
 	And the following index map:
 
@@ -97,7 +97,7 @@ func (a Atom) Compare(other Atom) int {
 
 	The remapped atom will be:
 
-		Atom(ID=AtomID(Site=2,Index=1),Cause=AtomID(Site=2,Index=2),Value=...)
+		Atom(ID=ID(Site=2,Index=1),Cause=ID(Site=2,Index=2),Value=...)
 */
 func (a Atom) RemapSite(m index.Map) Atom {
 	return Atom{

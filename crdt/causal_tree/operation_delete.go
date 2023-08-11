@@ -19,7 +19,7 @@ func (v Delete) MarshalJSON() ([]byte, error) {
 }
 func (v Delete) String() string { return "⌫ " }
 
-func (v Delete) ValidateChild(child atm.AtomValue) error {
+func (v Delete) ValidateChild(child atm.Value) error {
 	return fmt.Errorf("invalid atom value after Delete: %T (%v)", child, child)
 }
 

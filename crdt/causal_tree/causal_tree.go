@@ -31,7 +31,7 @@ type CausalTree struct {
 	// Weave is the flat representation of a causal tree.
 	Weave []atm.Atom
 	// Cursor is the ID of the causing atom for the next operation.
-	Cursor atm.AtomID
+	Cursor atm.ID
 	// Yarns is the list of atoms, grouped by the site that created them.
 	Yarns [][]atm.Atom
 	// Sitemap is the ordered list of site IDs. The index in this sitemap is used to represent a site in atoms
@@ -55,7 +55,7 @@ func siteIndex(sitemap []uuid.UUID, siteID uuid.UUID) int {
 // Returns the index of an atom within the weave.
 //
 // Time complexity: O(atoms)
-func (t *CausalTree) atomIndex(atomID atm.AtomID) int {
+func (t *CausalTree) atomIndex(atomID atm.ID) int {
 	if atomID.Timestamp == 0 {
 		return -1
 	}
@@ -70,7 +70,7 @@ func (t *CausalTree) atomIndex(atomID atm.AtomID) int {
 // Gets an atom from yarns.
 //
 // Time complexity: O(1)
-func (t *CausalTree) getAtom(atomID atm.AtomID) atm.Atom {
+func (t *CausalTree) getAtom(atomID atm.ID) atm.Atom {
 	return t.Yarns[atomID.Site][atomID.Index]
 }
 
@@ -257,7 +257,7 @@ func (t *CausalTree) Merge(remote *CausalTree) {
 // Returns whether the atom is deleted.
 //
 // Time complexity: O(atoms), or, O(avg. block size)
-func (t *CausalTree) isDeleted(atomID atm.AtomID) bool {
+func (t *CausalTree) isDeleted(atomID atm.ID) bool {
 	i := t.atomIndex(atomID)
 	if i < 0 {
 		return false
@@ -300,7 +300,7 @@ type indexWeft []int
 
 // Returns whether the provided atom is present in the yarn's view.
 // The nil atom is always in view.
-func (ixs indexWeft) isInView(id atm.AtomID) bool {
+func (ixs indexWeft) isInView(id atm.ID) bool {
 	return int(id.Index) < ixs[id.Site] || id.Timestamp == 0
 }
 
@@ -377,7 +377,7 @@ func (t *CausalTree) ViewAt(weft wft.Weft) (*CausalTree, error) {
 	// Set cursor, if it still exists in this view.
 	cursor := t.Cursor
 	if !limits.isInView(cursor) {
-		cursor = atm.AtomID{}
+		cursor = atm.ID{}
 	}
 	//
 	i := siteIndex(t.Sitemap, t.SiteID)
@@ -446,20 +446,20 @@ func (t *CausalTree) insertAtomAtCursor(atom atm.Atom) {
 // Inserts the atom as a child of the cursor, and returns its ID.
 //
 // Time complexity: O(atoms + log(sites))
-func (t *CausalTree) addAtom(value atm.AtomValue) (atm.AtomID, error) {
+func (t *CausalTree) addAtom(value atm.Value) (atm.ID, error) {
 	t.Timestamp++
 	if t.Timestamp == 0 {
 		// Overflow
-		return atm.AtomID{}, ErrStateLimitExceeded
+		return atm.ID{}, ErrStateLimitExceeded
 	}
 	if t.Cursor.Timestamp > 0 {
 		cursorAtom := t.getAtom(t.Cursor)
 		if err := cursorAtom.Value.ValidateChild(value); err != nil {
-			return atm.AtomID{}, err
+			return atm.ID{}, err
 		}
 	}
 	i := siteIndex(t.Sitemap, t.SiteID)
-	atomID := atm.AtomID{
+	atomID := atm.ID{
 		Site:      uint16(i),
 		Index:     uint32(len(t.Yarns[i])),
 		Timestamp: t.Timestamp,
@@ -493,7 +493,7 @@ func isContainer(atom atm.Atom) bool {
 func (t *CausalTree) filterDeleted() []atm.Atom {
 	atoms := make([]atm.Atom, len(t.Weave))
 	copy(atoms, t.Weave)
-	indices := make(map[atm.AtomID]int)
+	indices := make(map[atm.ID]int)
 	var hasDelete bool
 	for i, atom := range t.Weave {
 		indices[atom.ID] = i
@@ -535,7 +535,7 @@ func (t *CausalTree) filterDeleted() []atm.Atom {
 func (t *CausalTree) SetCursor(i int) error {
 	if i < 0 {
 		if i == -1 {
-			t.Cursor = atm.AtomID{}
+			t.Cursor = atm.ID{}
 			return nil
 		}
 		return ErrCursorOutOfRange

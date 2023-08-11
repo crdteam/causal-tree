@@ -21,7 +21,7 @@ func (v InsertStr) MarshalJSON() ([]byte, error) {
 
 func (v InsertStr) String() string { return "STR: " }
 
-func (v InsertStr) ValidateChild(child atm.AtomValue) error {
+func (v InsertStr) ValidateChild(child atm.Value) error {
 	switch child.(type) {
 	case InsertChar, Delete:
 		return nil
@@ -32,7 +32,7 @@ func (v InsertStr) ValidateChild(child atm.AtomValue) error {
 
 // InsertStr inserts a Str container after the root and advances the cursor.
 func (t *CausalTree) InsertStr() error {
-	t.Cursor = atm.AtomID{}
+	t.Cursor = atm.ID{}
 	atomID, err := t.addAtom(InsertStr{})
 	t.Cursor = atomID
 	return err
