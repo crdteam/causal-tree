@@ -1,9 +1,5 @@
 package indexmap
 
-// +---------------+
-// | Remap indices |
-// +---------------+
-
 // Map storing conversion between indices.
 // Conversion from an index to itself are not stored.
 // An empty map represents an identity mapping, where every index maps to itself.
@@ -23,5 +19,3 @@ func (m IndexMap) Get(i int) int {
 	}
 	return j
 }
-
-// -----
