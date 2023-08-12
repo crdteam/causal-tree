@@ -1,4 +1,4 @@
-package crdt_test
+package causaltree
 
 import (
 	"fmt"

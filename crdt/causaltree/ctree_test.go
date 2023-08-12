@@ -1,4 +1,4 @@
-package crdt_test
+package causaltree
 
 import (
 	"fmt"
@@ -7,13 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/crdteam/causal-tree/crdt/causaltree"
 	"github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
 
 func TestCausalTree(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -67,7 +66,7 @@ func TestCausalTree(t *testing.T) {
 }
 
 func TestBackwardsClock(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		// UUIDs don't progress with increasing timestamp: 1,5,2,4,3
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000005-8891-11ec-a04c-67855c00505b"),
@@ -116,7 +115,7 @@ func TestBackwardsClock(t *testing.T) {
 }
 
 func TestUnknownRemoteYarn(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -153,7 +152,7 @@ func TestUnknownRemoteYarn(t *testing.T) {
 }
 
 func TestDeleteCursor(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -183,7 +182,7 @@ func TestDeleteCursor(t *testing.T) {
 }
 
 func TestSetCursor(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 	)
 	defer teardown()
@@ -205,7 +204,7 @@ func TestSetCursor(t *testing.T) {
 }
 
 func TestDeleteAfterMerge(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -251,7 +250,7 @@ func TestDeleteAfterMerge(t *testing.T) {
 }
 
 func TestInsertsAtSamePosition(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 	)
 	defer teardown()
@@ -272,7 +271,7 @@ func TestInsertsAtSamePosition(t *testing.T) {
 
 // -----
 
-func setupTestView(t *testing.T) []*causaltree.CausalTree {
+func setupTestView(t *testing.T) []*CausalTree {
 	return testOperations(t, []operation{
 		// Create site #0: abcd
 		{op: insertChar, local: 0, char: 'a'},
@@ -299,7 +298,7 @@ func setupTestView(t *testing.T) []*causaltree.CausalTree {
 }
 
 func TestViewAt(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -350,7 +349,7 @@ func TestViewAt(t *testing.T) {
 }
 
 func TestViewAtError(t *testing.T) {
-	teardown := causaltree.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -694,10 +693,10 @@ func newRand() *rand.Rand {
 
 var (
 	sizes      = []int{64, 256, 1024, 4096, 16384}
-	benchTrees = map[int]*causaltree.CausalTree{}
+	benchTrees = map[int]*CausalTree{}
 )
 
-func getBenchTree(size int) *causaltree.CausalTree {
+func getBenchTree(size int) *CausalTree {
 	tree, ok := benchTrees[size]
 	if !ok {
 		tree, _ = makeRandomTree(size, newRand())
