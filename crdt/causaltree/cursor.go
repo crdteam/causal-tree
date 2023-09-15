@@ -1,8 +1,10 @@
-package crdt
+package causaltree
 
 import (
 	"fmt"
 	"unicode"
+
+	"github.com/crdteam/causal-tree/crdt/atom"
 )
 
 // Invokes the closure f for each atom of the causal block, including the head and except for Deletes.
@@ -13,7 +15,7 @@ import (
 // The causal block is defined as the contiguous range containing the head and all of its descendents.
 //
 // Time complexity: O(atoms), or, O(avg. block size)
-func walkCausalBlock2(weave []Atom, headPos int, f func(pos int, atom Atom, isDeleted bool) bool) int {
+func walkCausalBlock2(weave []atom.Atom, headPos int, f func(pos int, a atom.Atom, isDeleted bool) bool) int {
 	block := weave[headPos:]
 	if len(block) == 0 {
 		return 0
@@ -22,8 +24,8 @@ func walkCausalBlock2(weave []Atom, headPos int, f func(pos int, atom Atom, isDe
 	i := 0
 	count := 1
 	for i < len(block) {
-		atom := block[i]
-		if i > 0 && atom.Cause.Timestamp < head.ID.Timestamp {
+		a := block[i]
+		if i > 0 && a.Cause.Timestamp < head.ID.Timestamp {
 			// First atom whose parent has a lower timestamp (older) than head is the
 			// end of the causal block.
 			break
@@ -39,7 +41,7 @@ func walkCausalBlock2(weave []Atom, headPos int, f func(pos int, atom Atom, isDe
 			}
 		}
 		// Invokes closure, exiting if it returns false.
-		if !f(pos, atom, isDeleted) {
+		if !f(pos, a, isDeleted) {
 			break
 		}
 		count++
@@ -62,7 +64,7 @@ type Value interface {
 // position or to its right.
 type treePosition struct {
 	// ID is the underlying atom ID for this struct.
-	ID AtomID
+	ID atom.ID
 
 	t            *CausalTree
 	lastKnownPos int
@@ -79,7 +81,7 @@ func (p *treePosition) atomIndex() int {
 	panic(fmt.Sprintf("atomID %v not found after position %d (weave size: %d)", p.ID, p.lastKnownPos, size))
 }
 
-func (p *treePosition) walk(f func(pos int, atom Atom, isDeleted bool) bool) {
+func (p *treePosition) walk(f func(pos int, a atom.Atom, isDeleted bool) bool) {
 	headPos := p.atomIndex()
 	walkCausalBlock2(p.t.Weave, headPos, f)
 }
@@ -91,16 +93,15 @@ type String struct{ treePosition }
 
 func (*String) isValue() {}
 
-// walkChars skips the string head.
-func (s *String) walkChars(f func(i int, atom Atom, isDeleted bool) bool) {
-	s.walk(func(pos int, atom Atom, isDeleted bool) bool {
-		switch atom.Value.(type) {
+func (s *String) walkChars(f func(i int, a atom.Atom, isDeleted bool) bool) {
+	s.walk(func(pos int, a atom.Atom, isDeleted bool) bool {
+		switch a.Value.(type) {
 		case InsertStr:
 			return true
 		case InsertChar:
-			return f(pos, atom, isDeleted)
+			return f(pos, a, isDeleted)
 		default:
-			panic(fmt.Sprintf("unexpected atom type in String: %T", atom.Value))
+			panic(fmt.Sprintf("unexpected atom type in String: %T", a.Value))
 		}
 	})
 }
@@ -122,9 +123,9 @@ func (s *String) IsDeleted() bool {
 // Ignores whether the string was deleted.
 func (s *String) Snapshot() string {
 	var chars []rune
-	s.walkChars(func(pos int, atom Atom, isDeleted bool) bool {
+	s.walkChars(func(pos int, a atom.Atom, isDeleted bool) bool {
 		if !isDeleted {
-			chars = append(chars, atom.Value.(InsertChar).Char)
+			chars = append(chars, a.Value.(InsertChar).Char)
 		}
 		return true
 	})
@@ -135,7 +136,7 @@ func (s *String) Snapshot() string {
 // Ignores whether the string was deleted.
 func (s *String) Len() int {
 	var size int
-	s.walkChars(func(pos int, atom Atom, isDeleted bool) bool {
+	s.walkChars(func(pos int, a atom.Atom, isDeleted bool) bool {
 		if !isDeleted {
 			size++
 		}
@@ -178,8 +179,8 @@ func (cur *StringCursor) GetString() *String {
 	s0 := cur.lastKnownHeadPos
 	headPos := -1
 	for j := s0 + (c1 - c0); j >= s0; j-- {
-		atom := cur.t.Weave[j]
-		if _, ok := atom.Value.(InsertStr); ok {
+		a := cur.t.Weave[j]
+		if _, ok := a.Value.(InsertStr); ok {
 			headPos = j
 			cur.lastKnownHeadPos = j
 			break
@@ -210,7 +211,7 @@ func (cur *StringCursor) Index(i int) error {
 	// Walk the string starting from head to find the char at position i.
 	indexPos := -1
 	var count int
-	s.walkChars(func(pos int, atom Atom, isDeleted bool) bool {
+	s.walkChars(func(pos int, a atom.Atom, isDeleted bool) bool {
 		if isDeleted {
 			return true
 		}
@@ -234,8 +235,8 @@ func (cur *StringCursor) Index(i int) error {
 // Returns an error if cursor is pointing to the string head.
 func (cur *StringCursor) Value() (rune, error) {
 	pos := cur.atomIndex()
-	atom := cur.t.Weave[pos]
-	switch v := atom.Value.(type) {
+	a := cur.t.Weave[pos]
+	switch v := a.Value.(type) {
 	case InsertChar:
 		return v.Char, nil
 	case InsertStr:
@@ -264,8 +265,8 @@ func (cur *StringCursor) Insert(ch rune) (*Char, error) {
 // Returns an error if cursor is pointing to the string head.
 func (cur *StringCursor) Delete() error {
 	pos := cur.atomIndex()
-	atom := cur.t.Weave[pos]
-	if _, ok := atom.Value.(InsertStr); ok {
+	a := cur.t.Weave[pos]
+	if _, ok := a.Value.(InsertStr); ok {
 		return fmt.Errorf("out of bounds")
 	}
 	if _, err := cur.t.addAtom2(pos, Delete{}); err != nil {
@@ -281,8 +282,8 @@ func (cur *StringCursor) Delete() error {
 	// abef
 	s := cur.GetString()
 	prevPos := cur.lastKnownHeadPos
-	s.walkChars(func(pos int, atom Atom, isDeleted bool) bool {
-		if atom.ID == cur.ID {
+	s.walkChars(func(pos int, a atom.Atom, isDeleted bool) bool {
+		if a.ID == cur.ID {
 			prev := cur.t.Weave[prevPos]
 			cur.ID = prev.ID
 			cur.lastKnownPos = prevPos
@@ -318,11 +319,11 @@ func (ch *Char) Snapshot() rune {
 // ---- CausalTree methods
 
 // StringValue returns a wrapper over InsertStr.
-func (t *CausalTree) StringValue(atomID AtomID) (*String, error) {
+func (t *CausalTree) StringValue(atomID atom.ID) (*String, error) {
 	i := t.atomIndex(atomID)
-	atom := t.Weave[i]
-	if _, ok := atom.Value.(InsertStr); !ok {
-		return nil, fmt.Errorf("%v is not an InsertStr atom: %T (%v)", atomID, atom, atom)
+	a := t.Weave[i]
+	if _, ok := a.Value.(InsertStr); !ok {
+		return nil, fmt.Errorf("%v is not an InsertStr atom: %T (%v)", atomID, a, a)
 	}
 	return &String{treePosition{
 		ID:           atomID,
@@ -341,7 +342,7 @@ func (t *CausalTree) SetString() (*String, error) {
 }
 
 // DeleteAtom deletes the given atom from the tree.
-func (t *CausalTree) DeleteAtom(atomID AtomID) error {
+func (t *CausalTree) DeleteAtom(atomID atom.ID) error {
 	// TODO: change implementation to remove internal cursor from CausalTree.
 	t.Cursor = atomID
 	return t.Delete()
@@ -350,13 +351,13 @@ func (t *CausalTree) DeleteAtom(atomID AtomID) error {
 // TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.
 //
 // This is a copy of addAtom, but using the known position of the cause.
-func (t *CausalTree) addAtom2(causePos int, value AtomValue) (int, error) {
+func (t *CausalTree) addAtom2(causePos int, value atom.Value) (int, error) {
 	t.Timestamp++
 	if t.Timestamp == 0 {
 		// Overflow
 		return -1, ErrStateLimitExceeded
 	}
-	var causeID AtomID
+	var causeID atom.ID
 	if causePos >= 0 {
 		cause := t.Weave[causePos]
 		causeID = cause.ID
@@ -365,40 +366,40 @@ func (t *CausalTree) addAtom2(causePos int, value AtomValue) (int, error) {
 		}
 	}
 	i := siteIndex(t.Sitemap, t.SiteID)
-	atomID := AtomID{
+	atomID := atom.ID{
 		Site:      uint16(i),
 		Index:     uint32(len(t.Yarns[i])),
 		Timestamp: t.Timestamp,
 	}
-	atom := Atom{
+	a := atom.Atom{
 		ID:    atomID,
 		Cause: causeID,
 		Value: value,
 	}
-	atomPos := t.insertAtomAtCursor2(causePos, atom)
-	t.Yarns[i] = append(t.Yarns[i], atom)
+	atomPos := t.insertAtomAtCursor2(causePos, a)
+	t.Yarns[i] = append(t.Yarns[i], a)
 	return atomPos, nil
 }
 
 // TODO: MOVE THIS TO ctree.go AFTER ISSUE #5.
 //
 // This is a copy of insertAtomAtCursor, but using the known position of the cause.
-func (t *CausalTree) insertAtomAtCursor2(causePos int, atom Atom) int {
+func (t *CausalTree) insertAtomAtCursor2(causePos int, a atom.Atom) int {
 	if causePos < 0 {
 		// Cursor is at initial position.
-		t.insertAtom(atom, 0)
+		t.insertAtom(a, 0)
 		return 0
 	}
 	causeID := t.Weave[causePos].ID
 	insertPos := causePos + 1
-	walkCausalBlock(t.Weave[causePos:], func(a Atom) bool {
-		if a.Cause == causeID && a.Compare(atom) < 0 {
+	atom.WalkCausalBlock(t.Weave[causePos:], func(a0 atom.Atom) bool {
+		if a0.Cause == causeID && a0.Compare(a) < 0 {
 			// a is the first child smaller than atom, break.
 			return false
 		}
 		insertPos++
 		return true
 	})
-	t.insertAtom(atom, insertPos)
+	t.insertAtom(a, insertPos)
 	return insertPos
 }

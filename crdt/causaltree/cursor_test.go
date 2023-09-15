@@ -1,10 +1,10 @@
-package crdt_test
+package causaltree
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt/atom"
 )
 
 func TestString(t *testing.T) {
@@ -16,7 +16,7 @@ func TestString(t *testing.T) {
 			{op: insertChar, char: 'd'},
 			{op: insertChar, char: 't'},
 		})
-		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(atom.ID{Site: 0, Index: 0, Timestamp: 2})
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
@@ -41,7 +41,7 @@ func TestString(t *testing.T) {
 			// Delete char 'r' in position #2.
 			{op: deleteCharAt, pos: 2},
 		})
-		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(atom.ID{Site: 0, Index: 0, Timestamp: 2})
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
@@ -69,7 +69,7 @@ func TestString(t *testing.T) {
 			{local: 1, op: deleteCharAt, pos: 2},
 			{local: 0, op: merge, remote: 1},
 		})
-		str, err := trees[0].StringValue(crdt.AtomID{0, 0, 2})
+		str, err := trees[0].StringValue(atom.ID{Site: 0, Index: 0, Timestamp: 2})
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
@@ -90,7 +90,7 @@ func TestStringCursorReadOnly(t *testing.T) {
 		desc   string
 		ops    []operation
 		value  string
-		atomID crdt.AtomID
+		atomID atom.ID
 	}{
 		{
 			"only inserts",
@@ -102,7 +102,7 @@ func TestStringCursorReadOnly(t *testing.T) {
 				{op: insertChar, char: 't'},
 			},
 			"crdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete str[1]",
@@ -117,7 +117,7 @@ func TestStringCursorReadOnly(t *testing.T) {
 				{op: deleteCharAt, pos: 2},
 			},
 			"cdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete str[1] twice",
@@ -135,7 +135,7 @@ func TestStringCursorReadOnly(t *testing.T) {
 				{local: 0, op: merge, remote: 1},
 			},
 			"cdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete string",
@@ -150,7 +150,7 @@ func TestStringCursorReadOnly(t *testing.T) {
 				{op: deleteCharAt, pos: 0},
 			},
 			"crdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 	}
 	for _, test := range tests {
@@ -223,7 +223,7 @@ func TestStringCursorDelete(t *testing.T) {
 		desc   string
 		ops    []operation
 		value  string
-		atomID crdt.AtomID
+		atomID atom.ID
 	}{
 		{
 			"only inserts",
@@ -235,7 +235,7 @@ func TestStringCursorDelete(t *testing.T) {
 				{op: insertChar, char: 't'},
 			},
 			"crdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete str[1]",
@@ -250,7 +250,7 @@ func TestStringCursorDelete(t *testing.T) {
 				{op: deleteCharAt, pos: 2},
 			},
 			"cdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete str[1] twice",
@@ -268,7 +268,7 @@ func TestStringCursorDelete(t *testing.T) {
 				{local: 0, op: merge, remote: 1},
 			},
 			"cdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 		{
 			"delete string",
@@ -283,7 +283,7 @@ func TestStringCursorDelete(t *testing.T) {
 				{op: deleteCharAt, pos: 0},
 			},
 			"crdt",
-			crdt.AtomID{0, 0, 2},
+			atom.ID{Site: 0, Index: 0, Timestamp: 2},
 		},
 	}
 	for _, test := range tests {

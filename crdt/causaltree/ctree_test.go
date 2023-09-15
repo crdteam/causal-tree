@@ -1,4 +1,4 @@
-package crdt_test
+package causaltree
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/brunokim/causal-tree/crdt"
+	"github.com/crdteam/causal-tree/crdt/weft"
 	"github.com/google/uuid"
 )
 
 func TestCausalTree(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -66,7 +66,7 @@ func TestCausalTree(t *testing.T) {
 }
 
 func TestBackwardsClock(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		// UUIDs don't progress with increasing timestamp: 1,5,2,4,3
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000005-8891-11ec-a04c-67855c00505b"),
@@ -115,7 +115,7 @@ func TestBackwardsClock(t *testing.T) {
 }
 
 func TestUnknownRemoteYarn(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -152,7 +152,7 @@ func TestUnknownRemoteYarn(t *testing.T) {
 }
 
 func TestDeleteCursor(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000003-8891-11ec-a04c-67855c00505b"),
@@ -182,7 +182,7 @@ func TestDeleteCursor(t *testing.T) {
 }
 
 func TestSetCursor(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 	)
 	defer teardown()
@@ -204,7 +204,7 @@ func TestSetCursor(t *testing.T) {
 }
 
 func TestDeleteAfterMerge(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -250,7 +250,7 @@ func TestDeleteAfterMerge(t *testing.T) {
 }
 
 func TestInsertsAtSamePosition(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 	)
 	defer teardown()
@@ -271,7 +271,7 @@ func TestInsertsAtSamePosition(t *testing.T) {
 
 // -----
 
-func setupTestView(t *testing.T) []*crdt.CausalTree {
+func setupTestView(t *testing.T) []*CausalTree {
 	return testOperations(t, []operation{
 		// Create site #0: abcd
 		{op: insertChar, local: 0, char: 'a'},
@@ -298,7 +298,7 @@ func setupTestView(t *testing.T) []*crdt.CausalTree {
 }
 
 func TestViewAt(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -308,33 +308,33 @@ func TestViewAt(t *testing.T) {
 	t0 := trees[0]
 
 	tests := []struct {
-		weft crdt.Weft
+		weft weft.Weft
 		want string
 	}{
 		// Now
-		{crdt.Weft{9, 9}, "xabdyefg"},
+		{weft.Weft{9, 9}, "xabdyefg"},
 		// Far future
-		{crdt.Weft{100, 100}, "xabdyefg"},
+		{weft.Weft{100, 100}, "xabdyefg"},
 		// "Undoing" actions of site #0
-		{crdt.Weft{8, 9}, "xabdyef"},
-		{crdt.Weft{7, 9}, "xabdye"},
-		{crdt.Weft{6, 9}, "xabdy"},
-		{crdt.Weft{5, 9}, "xabdy"},
-		{crdt.Weft{4, 8}, "xab"}, // Cutting 'd' from site #0 requires removing its child 'y' from site #1
-		{crdt.Weft{3, 7}, "xab"}, // Cutting 'c' from site #0 requires removing its delete child from site #1
-		{crdt.Weft{2, 7}, "xa"},
-		{crdt.Weft{1, 7}, "x"},
-		{crdt.Weft{0, 7}, "x"},
+		{weft.Weft{8, 9}, "xabdyef"},
+		{weft.Weft{7, 9}, "xabdye"},
+		{weft.Weft{6, 9}, "xabdy"},
+		{weft.Weft{5, 9}, "xabdy"},
+		{weft.Weft{4, 8}, "xab"}, // Cutting 'd' from site #0 requires removing its child 'y' from site #1
+		{weft.Weft{3, 7}, "xab"}, // Cutting 'c' from site #0 requires removing its delete child from site #1
+		{weft.Weft{2, 7}, "xa"},
+		{weft.Weft{1, 7}, "x"},
+		{weft.Weft{0, 7}, "x"},
 		// "Undoing" actions of site #1
-		{crdt.Weft{9, 8}, "xabdefg"},
-		{crdt.Weft{9, 7}, "xabcdefg"},
-		{crdt.Weft{9, 6}, "abcdefg"},
-		{crdt.Weft{9, 5}, "abcdefg"},
-		{crdt.Weft{9, 4}, "abcdefg"},
-		{crdt.Weft{9, 3}, "abcdefg"},
-		{crdt.Weft{9, 2}, "abcdefg"},
-		{crdt.Weft{9, 1}, "abcdefg"},
-		{crdt.Weft{9, 0}, "abcdefg"},
+		{weft.Weft{9, 8}, "xabdefg"},
+		{weft.Weft{9, 7}, "xabcdefg"},
+		{weft.Weft{9, 6}, "abcdefg"},
+		{weft.Weft{9, 5}, "abcdefg"},
+		{weft.Weft{9, 4}, "abcdefg"},
+		{weft.Weft{9, 3}, "abcdefg"},
+		{weft.Weft{9, 2}, "abcdefg"},
+		{weft.Weft{9, 1}, "abcdefg"},
+		{weft.Weft{9, 0}, "abcdefg"},
 	}
 	for _, test := range tests {
 		view, err := t0.ViewAt(test.weft)
@@ -349,7 +349,7 @@ func TestViewAt(t *testing.T) {
 }
 
 func TestViewAtError(t *testing.T) {
-	teardown := crdt.MockUUIDs(
+	teardown := MockUUIDs(
 		uuid.MustParse("00000001-8891-11ec-a04c-67855c00505b"),
 		uuid.MustParse("00000002-8891-11ec-a04c-67855c00505b"),
 	)
@@ -359,12 +359,12 @@ func TestViewAtError(t *testing.T) {
 	t0 := trees[0]
 
 	tests := []struct {
-		weft crdt.Weft
+		weft weft.Weft
 	}{
 		// At timestamp 5 at site #0 we cut 'd', whose child 'y' in site #1 is at timestamp 9.
-		{crdt.Weft{4, 9}}, {crdt.Weft{3, 9}}, {crdt.Weft{2, 9}}, {crdt.Weft{1, 9}},
+		{weft.Weft{4, 9}}, {weft.Weft{3, 9}}, {weft.Weft{2, 9}}, {weft.Weft{1, 9}},
 		// At timestamp 4 at site #0 we cut 'c', whose delete child in site #1 is at timestamp 8.
-		{crdt.Weft{3, 8}}, {crdt.Weft{2, 8}}, {crdt.Weft{1, 8}},
+		{weft.Weft{3, 8}}, {weft.Weft{2, 8}}, {weft.Weft{1, 8}},
 	}
 	for _, test := range tests {
 		view, err := t0.ViewAt(test.weft)
@@ -637,10 +637,10 @@ func TestInsertCounterDomainCases(t *testing.T) {
 
 func TestValidateFuzzList(t *testing.T) {
 	f, err := os.Open("testdata/fuzz/FuzzList")
-	defer f.Close()
 	if err != nil {
 		t.Fatalf("error opening fuzz corpus directory: %v", err)
 	}
+	defer f.Close()
 	files, err := f.ReadDir(-1)
 	if err != nil {
 		t.Fatalf("error listing fuzz corpus: %v", err)
@@ -693,10 +693,10 @@ func newRand() *rand.Rand {
 
 var (
 	sizes      = []int{64, 256, 1024, 4096, 16384}
-	benchTrees = map[int]*crdt.CausalTree{}
+	benchTrees = map[int]*CausalTree{}
 )
 
-func getBenchTree(size int) *crdt.CausalTree {
+func getBenchTree(size int) *CausalTree {
 	tree, ok := benchTrees[size]
 	if !ok {
 		tree, _ = makeRandomTree(size, newRand())

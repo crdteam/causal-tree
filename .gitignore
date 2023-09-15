@@ -8,3 +8,8 @@ node_modules/
 
 # Rapid reports
 *.fail
+
+cover.*
+
+# Coverage
+coverage.*
